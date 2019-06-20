@@ -19,6 +19,7 @@ set (BIN_DIR ${CMAKE_BINARY_DIR}/staging/bin)
 
 set(LIB_FILES
     src/MQTTClient.cpp
+    src/MQTTFactory.cpp
     src/MQTTOptions.cpp
     src/MQTTProcessor.cpp
 )
