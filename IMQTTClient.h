@@ -1,12 +1,12 @@
 /**
- * @brief IMQTTClient
+ * @brief IMQTTListener
  * 
  * Interface for MQTT Client receipients
  * 
  */
 
-#ifndef _H_IMQTTCLIENT
-#define _H_IMQTTCLIENT
+#ifndef _H_IMQTTLISTENER
+#define _H_IMQTTLISTENER
 
 #include <cstdint>
 #include <memory>
@@ -28,10 +28,10 @@ namespace afm {
         using MQTTBuffer = std::vector<uint8_t>;
         using MQTTOptions = nlohmann::json;
 
-        class IMQTTClient
+        class IMQTTListener
         {
             public:
-                virtual ~IMQTTClient() {};
+                virtual ~IMQTTListener() {};
 
                 virtual void onConnected(bool success) = 0;
                 virtual void onSubscriptionAdded(bool success) = 0;
@@ -41,7 +41,7 @@ namespace afm {
                 virtual void onMessageDelivered(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos) = 0;
         };
 
-        using IMQTTClientSPtr = std::shared_ptr<IMQTTClient>;
+        using IMQTTListenerSPtr = std::shared_ptr<IMQTTListener>;
     }
 }
 #endif
