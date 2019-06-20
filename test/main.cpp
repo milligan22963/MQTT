@@ -14,7 +14,7 @@
 using namespace afm;
 using namespace communications;
 
-class TestClient : public IMQTTClient, std::enable_shared_from_this<TestClient>
+class TestClient : public IMQTTListener, std::enable_shared_from_this<TestClient>
 {
     public:
         virtual void onConnected(bool success) override
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     pMQTTClient->shutdown();
 
     std::cout << "Clearing mqttclient\n";
-    
+
     pMQTTClient = nullptr;
     
     pClient = nullptr;

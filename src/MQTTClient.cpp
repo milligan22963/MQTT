@@ -19,7 +19,7 @@ namespace afm {
             shutdown();
         }
 
-        bool MQTTClient::initialize(const MQTTOptions &options, IMQTTClientSPtr pListener)
+        bool MQTTClient::initialize(const MQTTOptions &options, IMQTTListenerSPtr pListener)
         {
             bool success = false;
 

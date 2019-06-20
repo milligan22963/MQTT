@@ -10,7 +10,7 @@
 
 #include <atomic>
 #include <thread>
-#include "IMQTTClient.h"
+#include "IMQTTListener.h"
 
 namespace afm {
     namespace communications {

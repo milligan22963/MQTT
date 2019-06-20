@@ -8,7 +8,7 @@
 #ifndef _H_MQTTCLIENT
 #define _H_MQTTCLIENT
 
-#include "IMQTTClient.h"
+#include "IMQTTListener.h"
 #include "MQTTProcessor.h"
 
 namespace afm {
@@ -19,12 +19,12 @@ namespace afm {
                 MQTTClient();
                 virtual ~MQTTClient();
 
-                virtual bool initialize(const MQTTOptions &options, IMQTTClientSPtr pListener);
+                virtual bool initialize(const MQTTOptions &options, IMQTTListenerSPtr pListener);
                 virtual bool sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos);
                 virtual void shutdown();
 
             private:
-                IMQTTClientSPtr m_pListener = nullptr;
+                IMQTTListenerSPtr m_pListener = nullptr;
                 MQTTProcessorSPtr m_pProcessor = nullptr;
         };
 
