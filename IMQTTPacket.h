@@ -9,6 +9,7 @@
 #define _H_IMQTT_PACKET
 
 #include <memory>
+#include "MQTTClient.h"
 
 namespace afm {
     namespace communications {
@@ -37,6 +38,10 @@ namespace afm {
             public:
                 virtual ~IMQTTPacket() {};
 
+                virtual bool initialize(const MQTTOptions &options) = 0;
+                virtual bool encodePacket(MQTTBuffer &buffer) = 0;
+                virtual bool decodePacket(const MQTTBuffer &buffer) = 0;
+                virtual MQTTPacketType getType() const = 0;
         };
 
         using IMQTTPacketSPtr = std::shared_ptr<IMQTTPacket>;
