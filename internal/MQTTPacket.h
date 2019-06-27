@@ -36,9 +36,11 @@ namespace afm {
             protected:
                 virtual uint32_t getVariableLength();
                 virtual bool encodePayload(MQTTBuffer &buffer) = 0;
-                virtual bool decodePayload(const MQTTBuffer &buffer, uint32_t offset, uint32_t payloadLength) = 0;
+                virtual bool decodePayload(const MQTTBuffer &buffer, uint32_t &offset, uint32_t payloadLength) = 0;
                 void setType(MQTTPacketType type) { m_type = type; }
                 void setFlags(uint8_t flags) { m_flags = flags; }
+                bool encodeData(MQTTBuffer &buffer, const MQTTBuffer &data);
+                bool decodeData(const MQTTBuffer &buffer, uint32_t &offset, MQTTBuffer &data);
                 uint8_t decodeVariableLength(const MQTTBuffer &buffer, uint32_t &variableLength);
 
             private:

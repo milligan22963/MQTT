@@ -17,7 +17,7 @@
 
 namespace afm {
     namespace communications {
-        enum MQTT_QOS
+        enum MQTT_QOS : uint8_t
         {
             MQTT_QOS_0 = 0,
             MQTT_QOS_1,

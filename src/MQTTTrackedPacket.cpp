@@ -11,6 +11,7 @@
 namespace afm {
     namespace communications {
         MQTTTrackedPacket::MQTTTrackedPacket()
+            : MQTTPacket()
         {
 
         }
@@ -29,22 +30,36 @@ namespace afm {
             return success;
         }
 
-        uint32_t MQTTTrackedPacket::getVariableLength()
-        {
-
-        }
-
         /**
          * Internal parts
          */
-        bool MQTTTrackedPacket::encodePayload(MQTTBuffer &buffer)
-        {
 
+        uint32_t MQTTTrackedPacket::getVariableLength()
+        {
+            return sizeof(m_messageId);
         }
 
-        bool MQTTTrackedPacket::decodePayload(const MQTTBuffer &buffer, uint32_t offset, uint32_t payloadLength)
+        bool MQTTTrackedPacket::encodePayload(MQTTBuffer &buffer)
         {
+            bool success = true;
 
+            buffer.push_back(HighByte(m_messageId));
+            buffer.push_back(LowByte(m_messageId));
+
+            return success;
+        }
+
+        bool MQTTTrackedPacket::decodePayload(const MQTTBuffer &buffer, uint32_t &offset, uint32_t payloadLength)
+        {
+            bool success = false;
+
+            if ((buffer.size() - offset) >= sizeof(m_messageId)) {
+                m_messageId = buffer[offset++] << 8;
+                m_messageId |= buffer[offset++];
+
+                success = true;
+            }
+            return success;
         }
     }
 }

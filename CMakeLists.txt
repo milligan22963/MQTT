@@ -23,6 +23,7 @@ set(LIB_FILES
     src/MQTTPacket.cpp
     src/MQTTPacketOptions.cpp
     src/MQTTProcessor.cpp
+    src/MQTTPublishPacket.cpp
     src/MQTTTrackedPacket.cpp
 )
 

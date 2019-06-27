@@ -96,6 +96,38 @@ namespace afm {
             return 0;
         }
 
+        bool MQTTPacket::encodeData(MQTTBuffer &buffer, const MQTTBuffer &data)
+        {
+            bool success = true;
+
+            uint16_t dataLength = (uint16_t)data.size();
+
+            buffer.push_back(HighByte(dataLength));
+            buffer.push_back(LowByte(dataLength));
+            buffer.insert(buffer.end(), data.begin(), data.end());
+
+            return success;
+        }
+
+        bool MQTTPacket::decodeData(const MQTTBuffer &buffer, uint32_t &offset, MQTTBuffer &data)
+        {
+            bool success = false;
+            uint16_t dataLength = 0;
+            uint32_t bufferRemaining = buffer.size() - offset;
+
+            data.clear();
+
+            dataLength = buffer[offset++] << 8;
+            dataLength |= buffer[offset++];
+
+            if (bufferRemaining >= dataLength) {
+                data.insert(data.end(), buffer.data() + offset, buffer.data() + offset + dataLength);
+                success = true;
+            }
+
+            return success;
+        }
+
         uint8_t MQTTPacket::decodeVariableLength(const MQTTBuffer &buffer, uint32_t &variableLength)
         {
             uint8_t bytesConsumed = 0;

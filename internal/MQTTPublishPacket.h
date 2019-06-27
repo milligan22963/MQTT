@@ -1,22 +1,22 @@
 /**
- * @brief MQTTTrackedPacket
+ * @brief MQTTPublishPacket
  * 
  * Base implementatio for MQTT Packets with tracking i.e. messages
  * 
  */
 
-#ifndef _H_MQTT_TRACKED_PACKET
-#define _H_MQTT_TRACKED_PACKET
+#ifndef _H_MQTT_PUBLISH_PACKET
+#define _H_MQTT_PUBLISH_PACKET
 
-#include "MQTTPacket.h"
+#include "MQTTTrackedPacket.h"
 
 namespace afm {
     namespace communications {
-        class MQTTTrackedPacket : public MQTTPacket
+        class MQTTPublishPacket : public MQTTTrackedPacket
         {
             public:
-                MQTTTrackedPacket();
-                virtual ~MQTTTrackedPacket();
+                MQTTPublishPacket();
+                virtual ~MQTTPublishPacket();
 
                 virtual bool initialize(const MQTTOptions &options) override;
 
@@ -24,13 +24,14 @@ namespace afm {
                 virtual uint32_t getVariableLength() override;
                 virtual bool encodePayload(MQTTBuffer &buffer) override;
                 virtual bool decodePayload(const MQTTBuffer &buffer, uint32_t &offset, uint32_t payloadLength) override;
-                uint16_t getMessageId() const { return m_messageId; }
 
             private:
-                uint16_t m_messageId = 0;
+                bool m_duplicate = false;
+                bool m_retain = false;
+                MQTT_QOS m_qos;
+                MQTTBuffer m_topic;
+                MQTTBuffer m_message;
         };
-
-        using MQTTTrackedPacketSPtr = std::shared_ptr<MQTTTrackedPacket>;
     }
 }
 #endif
