@@ -8,7 +8,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#include "MQTTOptions.h"
+#include "MQTTPacketOptions.h"
 #include "MQTTProcessor.h"
 #include "JSONUtil.h"
 

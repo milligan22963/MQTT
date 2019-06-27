@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "MQTTOptions.h"
+#include "MQTTPacketOptions.h"
 #include "MQTTClient.h"
 
 using namespace afm;

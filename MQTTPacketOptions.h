@@ -13,6 +13,8 @@
 namespace afm {
     namespace communications {
         extern const std::string sc_optionMessageId;
+        extern const std::string sc_brokerURL;
+        extern const std::string sc_brokerPort;
     }
 }
 #endif
