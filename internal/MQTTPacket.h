@@ -12,6 +12,14 @@
 
 namespace afm {
     namespace communications {
+        inline uint8_t HighByte(uint16_t value) {
+            return (uint8_t)((value & 0xFF00) >> 8);
+        }
+
+        inline uint8_t LowByte(uint16_t value) {
+            return (uint8_t)(value & 0xFF);
+        }
+
         class MQTTPacket : public IMQTTPacket
         {
             public:
@@ -19,9 +27,9 @@ namespace afm {
                 virtual ~MQTTPacket();
 
                 virtual bool initialize(const MQTTOptions &options) override;
-                virtual bool encodePacket(MQTTBuffer &buffer) override;
-                virtual bool decodePacket(const MQTTBuffer &buffer) override;
-                virtual MQTTPacketType getType() const override;
+                virtual bool encodePacket(MQTTBuffer &buffer) final;
+                virtual bool decodePacket(const MQTTBuffer &buffer) final;
+                virtual MQTTPacketType getType() const final;
 
                 static MQTTPacketType getType(const MQTTBuffer &buffer);
 
@@ -38,7 +46,7 @@ namespace afm {
                 uint8_t m_flags = 0;
         };
 
-        using IMQTTPacketSPtr = std::shared_ptr<IMQTTPacket>;
+        using MQTTPacketSPtr = std::shared_ptr<MQTTPacket>;
     }
 }
 #endif

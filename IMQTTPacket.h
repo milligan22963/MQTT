@@ -10,6 +10,7 @@
 
 #include <memory>
 #include "MQTTClient.h"
+#include "MQTTPacketOptions.h"
 
 namespace afm {
     namespace communications {
