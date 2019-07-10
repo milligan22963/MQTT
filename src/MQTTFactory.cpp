@@ -7,6 +7,8 @@
 
 #include "MQTTFactory.h"
 #include "MQTTPacket.h"
+#include "MQTTPublishPacket.h"
+#include "MQTTPublishAckPacket.h"
 
 namespace afm {
     namespace communications {
@@ -62,12 +64,12 @@ namespace afm {
                 break;
                 case MQTTPacketType::MQTT_Publish:
                 {
-
+                    pPacket = std::make_shared<MQTTPublishPacket>();
                 }
                 break;
                 case MQTTPacketType::MQTT_PublishAck:
                 {
-
+                    pPacket = std::make_shared<MQTTPublishAckPacket>();
                 }
                 break;
                 case MQTTPacketType::MQTT_PublishComplete:

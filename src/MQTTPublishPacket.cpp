@@ -16,8 +16,9 @@ namespace afm {
         const uint8_t sc_retainFlagSet = 0x01;
 
         MQTTPublishPacket::MQTTPublishPacket()
+            : MQTTTrackedPacket()
         {
-
+            setType(MQTTPacketType::MQTT_Publish);
         }
 
         MQTTPublishPacket::~MQTTPublishPacket()
@@ -93,6 +94,14 @@ namespace afm {
         bool MQTTPublishPacket::decodePayload(const MQTTBuffer &buffer, uint32_t &offset, uint32_t payloadLength)
         {
             bool success = false;
+            
+            // decode topic
+            // decode the messageid
+            if (MQTTTrackedPacket::decodePayload(buffer, offset, payloadLength) == true) {
+                //
+            }
+
+            // decode the message
 
             return success;
         }
