@@ -96,12 +96,16 @@ namespace afm {
             bool success = false;
             
             // decode topic
-            // decode the messageid
-            if (MQTTTrackedPacket::decodePayload(buffer, offset, payloadLength) == true) {
-                //
+            if (decodeData(buffer, offset, m_topic) == true) {
+                // decode the messageid
+                if (MQTTTrackedPacket::decodePayload(buffer, offset, payloadLength) == true) {
+                    // decode the message
+                    if (offset < payloadLength) {
+                        m_message.clear();
+                        m_message.insert(m_message.begin(), buffer.data() + offset, buffer.data() + payloadLength);
+                    }
+                }
             }
-
-            // decode the message
 
             return success;
         }

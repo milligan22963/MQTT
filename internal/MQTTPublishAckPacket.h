@@ -1,7 +1,7 @@
 /**
  * @brief MQTTPublishAckPacket
  * 
- * Base implementatio for MQTT Packets with tracking i.e. messages
+ * Implementatio for MQTT publish ack messages
  * 
  */
 
