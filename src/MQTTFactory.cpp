@@ -9,7 +9,9 @@
 #include "MQTTPacket.h"
 #include "MQTTPublishPacket.h"
 #include "MQTTPublishAckPacket.h"
+#include "MQTTPublishCompletedPacket.h"
 #include "MQTTPublishReceivedPacket.h"
+#include "MQTTPublishReleasedPacket.h"
 
 namespace afm {
     namespace communications {
@@ -75,7 +77,7 @@ namespace afm {
                 break;
                 case MQTTPacketType::MQTT_PublishComplete:
                 {
-
+                    pPacket = std::make_shared<MQTTPublishCompletedPacket>();
                 }
                 break;
                 case MQTTPacketType::MQTT_PublishReceive:
@@ -85,7 +87,7 @@ namespace afm {
                 break;
                 case MQTTPacketType::MQTT_PublishRelease:
                 {
-
+                    pPacket = std::make_shared<MQTTPublishReleasedPacket>();
                 }
                 break;
                 case MQTTPacketType::MQTT_Subscribe:
