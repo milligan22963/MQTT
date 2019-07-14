@@ -1,18 +1,18 @@
 {
     "definitions": {},
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://example.com/root.json",
+    "$id": "http://www.afmsoftware.com/mqttoptions.json",
     "type": "object",
-    "title": "The Root Schema",
+    "title": "The primary mqtt server/client options",
     "required": [
-    "url",
-    "port"
+        "url",
+        "port"
     ],
     "properties": {
         "url": {
             "$id": "#/properties/url",
             "type": "string",
-            "title": "The Url Schema",
+            "title": "The Url to use",
             "default": "",
             "examples": [
                 "www.mqtt.org"
@@ -22,10 +22,11 @@
         "port": {
             "$id": "#/properties/port",
             "type": "integer",
-            "title": "The Port Schema",
+            "title": "The Port definition",
             "default": 1883,
             "examples": [
-                1883
+                1883,
+                8883
             ]
         }
     }

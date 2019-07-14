@@ -24,6 +24,24 @@ namespace afm {
         extern const std::string sc_brokerPort;
 
         /**
+         * MQTT Connect options
+         */
+        extern const std::string sc_protocolName;
+        extern const std::string sc_protocolLevel;
+        extern const std::string sc_cleanSession;
+        extern const std::string sc_willFlag;
+        extern const std::string sc_willQOS;
+        extern const std::string sc_willRetain;
+        extern const std::string sc_usernameFlag;
+        extern const std::string sc_passwordFlag;
+        extern const std::string sc_keepAlive;
+        extern const std::string sc_clientId;
+        extern const std::string sc_willTopic;
+        extern const std::string sc_willMessage;
+        extern const std::string sc_username;
+        extern const std::string sc_password;
+        
+        /**
          * MQTT Publish options
          */
         extern const std::string sc_duplicateFlag;

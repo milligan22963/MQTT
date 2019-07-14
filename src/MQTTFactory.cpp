@@ -6,6 +6,7 @@
  */
 
 #include "MQTTFactory.h"
+#include "MQTTConnectPacket.h"
 #include "MQTTPacket.h"
 #include "MQTTPublishPacket.h"
 #include "MQTTPublishAckPacket.h"
@@ -42,7 +43,7 @@ namespace afm {
             switch (packetType) {
                 case MQTTPacketType::MQTT_Connect:
                 {
-
+                    pPacket = std::make_shared<MQTTConnectPacket>();
                 }
                 break;
                 case MQTTPacketType::MQTT_ConnectAck:

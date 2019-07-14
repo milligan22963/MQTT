@@ -1,0 +1,47 @@
+{
+    "definitions": {},
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://www.afmsoftware.com/mqttconnectionoptions.schema.json",
+    "type": "object",
+    "title": "The options for connect messages",
+    "required": [
+        "url",
+        "port"
+    ],
+    "properties": {
+        "protocol_name": {
+            "$id": "#/properties/protocol_name",
+            "type": "string",
+            "title": "The name to use for the protocol",
+            "default": "MQTT",
+            "examples": [
+                "MQTT"
+            ],
+            "pattern": "[a-zA-Z]"
+        },
+        "protocol_level": {
+            "$id": "#/properties/protocol_level",
+            "type": "integer",
+            "title": "The level for the protocol",
+            "default": 4,
+            "examples": [
+                4
+            ]
+        },
+        "clean_session": {
+            "$id": "#/properties/clean_session",
+            "type": "boolean",
+            "title": "Clean Session",
+            "definition": "True to clean the session, false otherwise",
+            "default": true
+        },
+        "will_flag": {
+            "$id": "#/properties/will_flag",
+            "type": "boolean",
+            "title": "Will Flag",
+            "definition": "True to have a will topic and message, false otherwise",
+            "default": false
+        }
+    }
+}
+   
