@@ -32,7 +32,8 @@ namespace afm {
 
             if (success == true) {
                 std::set<bool> results;
-                
+
+                // should these be non required?
                 results.insert(extractValue(options, sc_duplicateFlag, m_duplicate));
                 results.insert(extractValue(options, sc_qosLevel, m_qos));
                 results.insert(extractValue(options, sc_retainFlag, m_retain));
@@ -53,6 +54,9 @@ namespace afm {
                 }
 
                 setFlags(flags);
+
+                results.insert(extractValue(options, sc_topic, m_topic));
+                results.insert(extractValue(options, sc_message, m_message));
 
                 success = results.find(false) == results.end() ? true : false;
             }

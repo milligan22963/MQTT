@@ -47,6 +47,8 @@ namespace afm {
         extern const std::string sc_duplicateFlag;
         extern const std::string sc_qosLevel;
         extern const std::string sc_retainFlag;
+        extern const std::string sc_topic;
+        extern const std::string sc_message;
     }
 }
 #endif

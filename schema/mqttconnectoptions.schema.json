@@ -5,8 +5,7 @@
     "type": "object",
     "title": "The options for connect messages",
     "required": [
-        "url",
-        "port"
+        "client_id"
     ],
     "properties": {
         "protocol_name": {
@@ -41,6 +40,111 @@
             "title": "Will Flag",
             "definition": "True to have a will topic and message, false otherwise",
             "default": false
+        },
+        "username_flag": {
+            "$id": "#/properties/username_flag",
+            "type": "boolean",
+            "title": "Username Flag",
+            "definition": "True to have a username, false otherwise",
+            "default": false
+        },
+        "password_flag": {
+            "$id": "#/properties/password_flag",
+            "type": "boolean",
+            "title": "Password Flag",
+            "definition": "True to have a password, false otherwise",
+            "default": false
+        },
+        "keep_alive": {
+            "$id": "#/properties/keep_alive",
+            "type": "integer",
+            "title": "Keep Alive Period",
+            "definition": "The time in seconds to use for keep alives between client and broker",
+            "default": 30,
+            "minimum": 0,
+            "maximum": 65535
+        },
+        "client_id": {
+            "$id": "#/properties/client_id",
+            "type": "string",
+            "title": "Client id",
+            "definition": "The client id used between this client and the broker",
+            "pattern": "[0-9a-zA-Z]",
+            "minimum": 1,
+            "maximum": 23,
+            "$comment": "The maximum the broker must allow is 23 though you could have more"
+        }
+    },
+    "dependencies": {
+        "will_flag": {
+            "properties": {
+                "will_qos": {
+                    "$id": "#/properties/will_qos",
+                    "type":"integer",
+                    "title": "Will QOS",
+                    "description": "The Will message QOS"
+                },
+                "will_retain": {
+                    "$id": "#/properties/will_retain",
+                    "type":"boolean",
+                    "title": "Will Retain",
+                    "description": "True if the will message should be retained when published, false otherwise",
+                    "default": false
+                },
+                "will_topic": {
+                    "$id": "#/properties/will_topic",
+                    "type":"array",
+                    "title": "Will topic",
+                    "items": {
+                        "type":"integer"
+                    },
+                    "description": "The topic to post the will message to",
+                    "minItems": 1,
+                    "maxItems": 65535
+                },
+                "will_message": {
+                    "$id": "#/properties/will_message",
+                    "type":"array",
+                    "title": "Will message",
+                    "items": {
+                        "type":"integer"
+                    },
+                    "description": "The will message to post",
+                    "minItems": 0,
+                    "maxItems": 65535,
+                    "$comment": "The will message is limited to 16 bit length according to the spec"
+                }
+            }
+        },
+        "username_flag": {
+            "properties": {
+                "username": {
+                    "$id": "#/properties/username",
+                    "type":"array",
+                    "title": "Username",
+                    "items": {
+                        "type":"integer"
+                    },
+                    "description": "The username to use for the given client connection",
+                    "minItems": 1,
+                    "maxItems": 65535
+                }
+            }
+        },
+        "password_flag": {
+            "properties": {
+                "password": {
+                    "$id": "#/properties/password",
+                    "type":"array",
+                    "title": "Password",
+                    "items": {
+                        "type":"integer"
+                    },
+                    "description": "The password associated with the username for the given client connection",
+                    "minItems": 1,
+                    "maxItems": 65535
+                }
+            }
         }
     }
 }
