@@ -40,8 +40,12 @@ namespace afm {
                 void setType(MQTTPacketType type) { m_type = type; }
                 void setFlags(uint8_t flags) { m_flags = flags; }
                 bool encodeData(MQTTBuffer &buffer, const MQTTBuffer &data);
+                bool encodeData(MQTTBuffer &buffer, const std::string &data);
                 bool decodeData(const MQTTBuffer &buffer, uint32_t &offset, MQTTBuffer &data);
+                bool decodeData(const MQTTBuffer &buffer, uint32_t &offset, std::string &data);
                 uint8_t decodeVariableLength(const MQTTBuffer &buffer, uint32_t &variableLength);
+                uint16_t calculateFieldLength(const MQTTBuffer &buffer);
+                uint16_t calculateFieldLength(const std::string &buffer);
 
             private:
                 MQTTPacketType m_type = MQTTPacketType::MQTT_Reserved;

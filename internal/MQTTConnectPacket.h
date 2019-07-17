@@ -28,7 +28,7 @@ namespace afm {
             private:
                 std::string m_clientId;
                 std::string m_protocolName = "MQTT";
-                uint16_t    m_protocolLevel = 4;
+                uint8_t     m_protocolLevel = 4;
                 uint16_t    m_keepAlive = 30;
                 bool        m_cleanSession = false;
                 bool        m_willFlag = false;
