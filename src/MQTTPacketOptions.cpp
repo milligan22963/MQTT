@@ -40,6 +40,12 @@ namespace afm {
         const std::string sc_password = "password";
 
         /**
+         * MQTT Connection Ack options
+         */
+        const std::string sc_sessionPresent = "session_present";
+        const std::string sc_connectionResponse = "connection_response";
+
+        /**
          * MQTT Publish options
          */
         const std::string sc_duplicateFlag = "duplicate";

@@ -40,6 +40,12 @@ namespace afm {
         extern const std::string sc_willMessage;
         extern const std::string sc_username;
         extern const std::string sc_password;
+
+        /**
+         * MQTT Connection Ack options
+         */
+        extern const std::string sc_sessionPresent;
+        extern const std::string sc_connectionResponse;
         
         /**
          * MQTT Publish options
