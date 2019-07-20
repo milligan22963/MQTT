@@ -1,0 +1,49 @@
+{
+    "definitions": {},
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://www.afmsoftware.com/mqttsubscribeoptions.schema.json",
+    "type": "object",
+    "title": "The options for subscribe messages",
+    "required": [
+        "message_id"
+    ],
+    "properties": {
+        "message_id": {
+            "$id": "#/properties/message_id",
+            "type": "integer",
+            "title": "Message Id",
+            "definition": "The id for this tracked package"
+        },
+        "subscriptions": {
+            "$id": "#/properties/subscriptions",
+            "type":"array",
+            "title": "Topics",
+            "items": {
+                "type":"object",
+                "properties": {
+                    "topic": {
+                        "$id": "#/properties/topic",
+                        "type":"array",
+                        "title": "Topic",
+                        "items": {
+                            "type":"integer"
+                        },
+                        "description": "The topic to subscribe to",
+                        "minItems": 1,
+                        "maxItems": 65535
+                    },
+                    "qos": {
+                        "$id": "#/properties/qos",
+                        "type":"integer",
+                        "title": "QOS",
+                        "description": "The QOS for this subscription"
+                    }
+                }
+            },
+            "description": "The topics to subscribe to",
+            "minItems": 1,
+            "maxItems": 65535
+        }
+    }
+}
+   

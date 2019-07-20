@@ -46,6 +46,11 @@ namespace afm {
          */
         extern const std::string sc_sessionPresent;
         extern const std::string sc_connectionResponse;
+
+        /**
+         * MQTT Subscribe packet options
+         */
+        extern const std::string sc_subscriptions;
         
         /**
          * MQTT Publish options

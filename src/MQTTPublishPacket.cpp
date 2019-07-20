@@ -72,7 +72,10 @@ namespace afm {
         {
             uint32_t length = MQTTTrackedPacket::getVariableLength();
 
-            length += m_topic.size();
+            // topic is utf-8 encoded
+            length += calculateFieldLength(m_topic);
+
+            // message is application specific
             length += m_message.size();
 
             return length;

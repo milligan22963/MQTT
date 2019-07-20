@@ -29,6 +29,7 @@ set(LIB_FILES
     src/MQTTPublishAckPacket.cpp
     src/MQTTPublishCompletedPacket.cpp
     src/MQTTPublishReceivedPacket.cpp
+    src/MQTTSubscribePacket.cpp
     src/MQTTTrackedPacket.cpp
 )
 

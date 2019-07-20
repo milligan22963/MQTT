@@ -46,6 +46,11 @@ namespace afm {
         const std::string sc_connectionResponse = "connection_response";
 
         /**
+         * MQTT Subscribe packet options
+         */
+        const std::string sc_subscriptions = "subscriptions";
+
+        /**
          * MQTT Publish options
          */
         const std::string sc_duplicateFlag = "duplicate";
