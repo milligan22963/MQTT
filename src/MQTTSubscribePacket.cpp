@@ -73,9 +73,19 @@ namespace afm {
         {
             bool success = true;
 
+            // pull out the message_id
             success = MQTTTrackedPacket::decodePayload(buffer, offset, payloadLength);
 
             // get subscriptions
+            if (success == true) {
+                MQTTBuffer topic;
+
+                while (decodeData(buffer, offset, topic) == true) {
+                    MQTT_QOS qos;
+                    qos = (MQTT_QOS)buffer[offset++];
+                    m_subscriptions.push_back({topic, qos});
+                }
+            }
 
             return success;
         }
