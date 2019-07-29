@@ -22,7 +22,7 @@
                 "type":"object",
                 "properties": {
                     "topic": {
-                        "$id": "#/properties/topic",
+                        "$id": "#/properties/items/topic",
                         "type":"array",
                         "title": "Topic",
                         "items": {
@@ -33,7 +33,7 @@
                         "maxItems": 65535
                     },
                     "qos": {
-                        "$id": "#/properties/qos",
+                        "$id": "#/properties/items/qos",
                         "type":"integer",
                         "title": "QOS",
                         "description": "The QOS for this subscription"

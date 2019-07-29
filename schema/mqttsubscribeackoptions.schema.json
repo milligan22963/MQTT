@@ -1,0 +1,34 @@
+{
+    "definitions": {},
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://www.afmsoftware.com/mqttsubscribeackoptions.schema.json",
+    "type": "object",
+    "title": "The options for subscribe ack messages",
+    "required": [
+        "message_id"
+    ],
+    "properties": {
+        "message_id": {
+            "$id": "#/properties/message_id",
+            "type": "integer",
+            "title": "Message Id",
+            "definition": "The id for this tracked package"
+        },
+        "subscriptions": {
+            "$id": "#/properties/subscriptions",
+            "type":"array",
+            "title": "Sub acks",
+            "items": {
+                "$id": "#/properties/items/qos",
+                "type":"integer",
+                "enum": [0, 1, 2, 128],
+                "title": "QOS",
+                "description": "The QOS for this subscription ack"
+            },
+            "description": "The subscriptions being acked",
+            "minItems": 1,
+            "maxItems": 65535
+        }
+    }
+}
+   
