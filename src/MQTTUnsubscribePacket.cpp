@@ -1,42 +1,40 @@
 /**
  * @brief MQTTSubscribePacket
  * 
- * Implementation for MQTT Subscribe packet
+ * Implementation for MQTT UnSubscribe packet
  * 
  */
 
 #include <set>
 
 #include "JSONUtil.h"
-#include "MQTTSubscribePacket.h"
+#include "MQTTUnsubscribePacket.h"
 
 namespace afm {
     namespace communications {
-        MQTTSubscribePacket::MQTTSubscribePacket()
+        MQTTUnSubscribePacket::MQTTUnSubscribePacket()
             : MQTTTrackedPacket()
         {
-            setType(MQTTPacketType::MQTT_Subscribe);
+            setType(MQTTPacketType::MQTT_UnSubscribe);
             setFlags(0x02);
         }
 
-        MQTTSubscribePacket::~MQTTSubscribePacket()
+        MQTTUnSubscribePacket::~MQTTUnSubscribePacket()
         {
             m_subscriptions.clear();
         }
 
-        bool MQTTSubscribePacket::initialize(const MQTTOptions &options)
+        bool MQTTUnSubscribePacket::initialize(const MQTTOptions &options)
         {
             std::set<bool> results;
 
             if (MQTTTrackedPacket::initialize(options) == true) {
-                MQTT_QOS qos = MQTT_QOS::MQTT_QOS_0;
                 MQTTBuffer topic;
 
                 for (auto subscription : options[sc_subscriptions]) {
-                    results.insert(extractValue(subscription, sc_qosLevel, qos));
                     results.insert(extractValue(subscription, sc_topic, topic));
 
-                    m_subscriptions.push_back({topic, qos});
+                    m_subscriptions.push_back(topic);
                 }
             } else {
                 results.insert(false);
@@ -44,33 +42,31 @@ namespace afm {
             return results.find(false) == results.end() ? true : false;
         }
 
-        uint32_t MQTTSubscribePacket::getVariableLength()
+        uint32_t MQTTUnSubscribePacket::getVariableLength()
         {
             uint32_t length = MQTTTrackedPacket::getVariableLength();
 
             for (auto subscription : m_subscriptions) {
-                length += calculateFieldLength(subscription.topic);
-                length += sizeof(MQTT_QOS);
+                length += calculateFieldLength(subscription);
             }
 
             return length;
         }
 
-        bool MQTTSubscribePacket::encodePayload(MQTTBuffer &buffer)
+        bool MQTTUnSubscribePacket::encodePayload(MQTTBuffer &buffer)
         {
             bool success = MQTTTrackedPacket::encodePayload(buffer);
 
             if (success == true) {
                 for (auto subscription : m_subscriptions) {
-                    encodeData(buffer, subscription.topic);
-                    buffer.push_back(subscription.qos);
+                    encodeData(buffer, subscription);
                 }
             }
 
             return success;
         }
 
-        bool MQTTSubscribePacket::decodePayload(const MQTTBuffer &buffer, uint32_t &offset, uint32_t payloadLength)
+        bool MQTTUnSubscribePacket::decodePayload(const MQTTBuffer &buffer, uint32_t &offset, uint32_t payloadLength)
         {
             bool success = true;
 
@@ -82,9 +78,7 @@ namespace afm {
                 MQTTBuffer topic;
 
                 while (decodeData(buffer, offset, topic) == true) {
-                    MQTT_QOS qos;
-                    qos = (MQTT_QOS)buffer[offset++];
-                    m_subscriptions.push_back({topic, qos});
+                    m_subscriptions.push_back(topic);
                 }
             }
 

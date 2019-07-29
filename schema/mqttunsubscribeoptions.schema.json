@@ -1,0 +1,38 @@
+{
+    "definitions": {},
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://www.afmsoftware.com/mqttunsubscribeoptions.schema.json",
+    "type": "object",
+    "title": "The options for unsubscribe messages",
+    "required": [
+        "message_id"
+    ],
+    "properties": {
+        "message_id": {
+            "$id": "#/properties/message_id",
+            "type": "integer",
+            "title": "Message Id",
+            "definition": "The id for this tracked package"
+        },
+        "subscriptions": {
+            "$id": "#/properties/subscriptions",
+            "type":"array",
+            "title": "Topics",
+            "items": {
+                "$id": "#/properties/items/topic",
+                "type":"array",
+                "title": "Topic",
+                "items": {
+                    "type":"integer"
+                },
+                "description": "The topic to unsubscribe from",
+                "minItems": 1,
+                "maxItems": 65535
+            },
+            "description": "The topics to unsubscribe from",
+            "minItems": 1,
+            "maxItems": 65535
+        }
+    }
+}
+   

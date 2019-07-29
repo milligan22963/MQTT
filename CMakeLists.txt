@@ -21,9 +21,11 @@ set(LIB_FILES
     src/MQTTClient.cpp
     src/MQTTConnectPacket.cpp
     src/MQTTConnectAckPacket.cpp
+    src/MQTTDisconnectPacket.cpp
     src/MQTTFactory.cpp
     src/MQTTPacket.cpp
     src/MQTTPacketOptions.cpp
+    src/MQTTPingRequestPacket.cpp
     src/MQTTProcessor.cpp
     src/MQTTPublishPacket.cpp
     src/MQTTPublishAckPacket.cpp
@@ -32,6 +34,8 @@ set(LIB_FILES
     src/MQTTSubscribePacket.cpp
     src/MQTTSubscribeAckPacket.cpp
     src/MQTTTrackedPacket.cpp
+    src/MQTTUnsubscribePacket.cpp
+    src/MQTTUnsubscribeAckPacket.cpp
 )
 
 set(SRC_FILES

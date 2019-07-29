@@ -20,7 +20,7 @@ namespace afm {
 
         MQTTSubscribeAckPacket::~MQTTSubscribeAckPacket()
         {
-
+            m_subscriptionStatus.clear();
         }
 
         bool MQTTSubscribeAckPacket::initialize(const MQTTOptions &options)

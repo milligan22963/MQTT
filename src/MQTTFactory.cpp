@@ -8,7 +8,10 @@
 #include "MQTTFactory.h"
 #include "MQTTConnectPacket.h"
 #include "MQTTConnectAckPacket.h"
+#include "MQTTDisconnectPacket.h"
 #include "MQTTPacket.h"
+#include "MQTTPingRequestPacket.h"
+#include "MQTTPingResponsePacket.h"
 #include "MQTTPublishPacket.h"
 #include "MQTTPublishAckPacket.h"
 #include "MQTTPublishCompletedPacket.h"
@@ -16,6 +19,8 @@
 #include "MQTTPublishReleasedPacket.h"
 #include "MQTTSubscribePacket.h"
 #include "MQTTSubscribeAckPacket.h"
+#include "MQTTUnsubscribePacket.h"
+#include "MQTTUnsubscribeAckPacket.h"
 
 namespace afm {
     namespace communications {
@@ -56,17 +61,17 @@ namespace afm {
                 break;
                 case MQTTPacketType::MQTT_Disconnect:
                 {
-
+                    pPacket = std::make_shared<MQTTDisconnectPacket>();
                 }
                 break;
                 case MQTTPacketType::MQTT_PingRequest:
                 {
-
+                    pPacket = std::make_shared<MQTTPingRequestPacket>();
                 }
                 break;
                 case MQTTPacketType::MQTT_PingResponse:
                 {
-
+                    pPacket = std::make_shared<MQTTPingResponsePacket>();
                 }
                 break;
                 case MQTTPacketType::MQTT_Publish:
@@ -106,12 +111,12 @@ namespace afm {
                 break;
                 case MQTTPacketType::MQTT_UnSubscribe:
                 {
-
+                    pPacket = std::make_shared<MQTTUnSubscribePacket>();
                 }
                 break;
                 case MQTTPacketType::MQTT_UnSubscribeAck:
                 {
-
+                    pPacket = std::make_shared<MQTTUnSubscribeAckPacket>();
                 }
                 break;
                 default:
