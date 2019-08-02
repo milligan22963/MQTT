@@ -14,8 +14,11 @@ set (CMAKE_CXX_STANDARD 14)
 set (JSON_INCLUDE /usr/local/include/nlohmann)
 
 # Output for install
-set (LIB_DIR ${CMAKE_BINARY_DIR}/staging/lib)
-set (BIN_DIR ${CMAKE_BINARY_DIR}/staging/bin)
+set(LIB_DIR ${CMAKE_BINARY_DIR}/staging/lib)
+set(BIN_DIR ${CMAKE_BINARY_DIR}/staging/bin)
+
+set(AFM_SOCKET_INCLUDE ${CMAKE_SOURCE_DIR}/../afmSocket)
+set(AFM_SOCKET_LIB ${CMAKE_SOURCE_DIR}/../afmSocket/cmake-release)
 
 set(LIB_FILES
     src/MQTTClient.cpp
@@ -46,10 +49,12 @@ include_directories (
     .
     internal
     ${JSON_INCLUDE}
+    ${AFM_SOCKET_INCLUDE}
 )
 
 link_directories (
     ${LIB_DIR}
+    ${AFM_SOCKET_LIB}
 )
 
 add_library (MQTT ${LIB_FILES})
@@ -58,6 +63,7 @@ add_executable (mqttClientTest ${SRC_FILES})
 target_link_libraries(
     mqttClientTest
     MQTT
+    AFMSocket
     pthread
 )
 

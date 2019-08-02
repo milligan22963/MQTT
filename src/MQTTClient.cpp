@@ -27,7 +27,11 @@ namespace afm {
                 m_pListener = pListener;
                 m_pProcessor = std::make_shared<MQTTProcessor>();
 
-                if (m_pProcessor->initialize(options) == true) {
+                MQTTOptions clientOptions = options;
+
+                clientOptions[sc_processorType] = sc_mqttClient;
+
+                if (m_pProcessor->initialize(clientOptions) == true) {
                     success = true;
                 } else {
                     m_pProcessor->shutdown();
