@@ -13,7 +13,7 @@
 
 namespace afm {
     namespace communications {
-        class MQTTClient : public std::enable_shared_from_this<MQTTClient>
+        class MQTTClient : public IMQTTListener, std::enable_shared_from_this<MQTTClient>
         {
             public:
                 MQTTClient();
@@ -22,6 +22,16 @@ namespace afm {
                 virtual bool initialize(const MQTTOptions &options, IMQTTListenerSPtr pListener);
                 virtual bool sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos);
                 virtual void shutdown();
+
+                /**
+                 * IMQTTListener interface implementation
+                 */
+                virtual void onConnected(bool success) override;
+                virtual void onSubscriptionAdded(bool success) override;
+                virtual void onSubscriptionRemoved(bool success) override;
+                virtual void onDisconnected(bool success) override;
+                virtual void onMessageReceived(const IMQTTPacketSPtr pPacket) override;
+                virtual void onMessageDelivered(const IMQTTPacketSPtr pPacket) override;
 
             private:
                 IMQTTListenerSPtr m_pListener = nullptr;

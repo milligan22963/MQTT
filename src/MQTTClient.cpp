@@ -56,5 +56,37 @@ namespace afm {
             }
             m_pListener = nullptr;
         }
+
+        void MQTTClient::onConnected(bool success)
+        {
+            if (success == true) {
+                // send out any backlogged data
+            }
+        }
+
+        void MQTTClient::onSubscriptionAdded(bool success)
+        {
+
+        }
+
+        void MQTTClient::onSubscriptionRemoved(bool success)
+        {
+
+        }
+
+        void MQTTClient::onDisconnected(bool success)
+        {
+            // start backlogging
+        }
+
+        void MQTTClient::onMessageReceived(IMQTTPacketSPtr pPacket)
+        {
+
+        }
+
+        void MQTTClient::onMessageDelivered(IMQTTPacketSPtr pPacket)
+        {
+
+        }
     }
 }

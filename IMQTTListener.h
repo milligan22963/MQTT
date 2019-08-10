@@ -14,21 +14,11 @@
 #include <vector>
 
 #include <json.hpp>
+#include "IMQTTPacket.h"
+#include "MQTTTypes.h"
 
 namespace afm {
     namespace communications {
-        enum MQTT_QOS : uint8_t
-        {
-            MQTT_QOS_0 = 0,
-            MQTT_QOS_1,
-            MQTT_QOS_2,
-            MQTT_QOS_FAILURE = 0x80,
-            END_MQTT_QOS
-        };
-
-        using MQTTBuffer = std::vector<uint8_t>;
-        using MQTTOptions = nlohmann::json;
-
         class IMQTTListener
         {
             public:
@@ -38,8 +28,8 @@ namespace afm {
                 virtual void onSubscriptionAdded(bool success) = 0;
                 virtual void onSubscriptionRemoved(bool success) = 0;
                 virtual void onDisconnected(bool success) = 0;
-                virtual void onMessageReceived(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos) = 0;
-                virtual void onMessageDelivered(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos) = 0;
+                virtual void onMessageReceived(const IMQTTPacketSPtr pPacket) = 0;
+                virtual void onMessageDelivered(const IMQTTPacketSPtr pPacket) = 0;
         };
 
         using IMQTTListenerSPtr = std::shared_ptr<IMQTTListener>;

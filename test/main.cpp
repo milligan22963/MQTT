@@ -41,12 +41,12 @@ class TestClient : public IMQTTListener, std::enable_shared_from_this<TestClient
 
         }
 
-        virtual void onMessageReceived(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos) override
+        virtual void onMessageReceived(const IMQTTPacketSPtr pPacket) override
         {
 
         }
 
-        virtual void onMessageDelivered(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos) override
+        virtual void onMessageDelivered(const IMQTTPacketSPtr pPacket) override
         {
 
         }

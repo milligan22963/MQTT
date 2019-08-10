@@ -9,7 +9,7 @@
 #define _H_IMQTT_PACKET
 
 #include <memory>
-#include "MQTTClient.h"
+#include "MQTTTypes.h"
 #include "MQTTPacketOptions.h"
 
 namespace afm {
