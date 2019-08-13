@@ -19,39 +19,6 @@ std::atomic<bool> g_done;
 using namespace afm;
 using namespace communications;
 
-class TestClient : public IMQTTListener, std::enable_shared_from_this<TestClient>
-{
-    public:
-        virtual void onConnected(bool success) override
-        {
-
-        }
-        virtual void onSubscriptionAdded(bool success)  override
-        {
-
-        }
-
-        virtual void onSubscriptionRemoved(bool success) override
-        {
-
-        }
-
-        virtual void onDisconnected(bool success) override
-        {
-
-        }
-
-        virtual void onMessageReceived(const IMQTTPacketSPtr pPacket) override
-        {
-
-        }
-
-        virtual void onMessageDelivered(const IMQTTPacketSPtr pPacket) override
-        {
-
-        }
-};
-
 void programInterrupt(int signalNumber)
 {
     if (signalNumber == SIGINT) {
@@ -68,11 +35,10 @@ int main(int argc, char *argv[])
     };
 
     int returnCode = 0;
-    std::shared_ptr<TestClient> pClient = std::make_shared<TestClient>();
 
     MQTTClientSPtr pMQTTClient = std::make_shared<MQTTClient>();
 
-    if (pMQTTClient->initialize(mqttOptions, pClient) == true) {
+    if (pMQTTClient->initialize(mqttOptions) == true) {
         std::cout << "Initialized\n";
 
         signal(SIGINT, programInterrupt);
@@ -92,8 +58,6 @@ int main(int argc, char *argv[])
     std::cout << "Clearing mqttclient\n";
 
     pMQTTClient = nullptr;
-    
-    pClient = nullptr;
 
     return returnCode;
 }

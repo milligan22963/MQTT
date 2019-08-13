@@ -22,8 +22,8 @@ namespace afm {
         const std::string sc_mqttServer = "server";
 
         MQTTProcessor::MQTTProcessor()
-            : m_threadRunning(false)
-            , m_disconnectExpected(false)
+            : m_disconnectExpected(false)
+            , m_threadRunning(false)
         {
 
         }
@@ -47,13 +47,25 @@ namespace afm {
                 if (m_connection->initialize(options) == true) {
                     m_connection->addListener(shared_from_this());
                     m_threadRunning = true;
-                    m_processingThread = std::thread(&MQTTProcessor::processing, this);
+                    m_processingThread = std::thread(&MQTTProcessor::processing, shared_from_this());
                     success = true;
                 } else {
                     m_connection = nullptr;
                 }
             }
 
+            return success;
+        }
+
+        bool MQTTProcessor::sendPacket(const IMQTTPacketSPtr pPacket)
+        {
+            bool success = false;
+
+            SocketBuffer data;
+
+            if (pPacket->encodePacket(data) == true) {
+                success = m_connection->write(data);
+            }
             return success;
         }
 
@@ -78,20 +90,23 @@ namespace afm {
             return success;
         }
 
-        void MQTTProcessor::addListener(IMQTTListenerSPtr &pListener)
+        void MQTTProcessor::addListener(IMQTTListenerSPtr pListener)
         {
             m_listeners.push_back(pListener);
         }
 
-        void MQTTProcessor::removeListener(IMQTTListenerSPtr &pListener)
+        void MQTTProcessor::removeListener(IMQTTListenerSPtr pListener)
         {
             m_listeners.remove(pListener);
         }
 
         void MQTTProcessor::onConnected()
         {
+            std::cout << "We are connected to the other end...\n";
+            // Inform of socket level connection
             for (auto listener : m_listeners)
             {
+                std::cout << "Informing users\n";
                 listener->onConnected(true);
             }
         }
@@ -99,19 +114,27 @@ namespace afm {
         void MQTTProcessor::onDataReceived(const SocketBuffer &socketBuffer)
         {
             // convert this buffer to a message and pass it to the listener(s)
-            IMQTTPacketSPtr pPacket = nullptr;
+            IMQTTPacketSPtr pPacket = MQTTFactory::getInstance()->createPacket(socketBuffer);
 
-            for (auto listener : m_listeners) {
-                listener->onMessageReceived(pPacket);
+            if (pPacket != nullptr) {
+                for (auto listener : m_listeners) {
+                    listener->onMessageReceived(pPacket);
+                }
+            } else {
+                // failed
             }
         }
 
         void MQTTProcessor::onDataWritten(const SocketBuffer &socketBuffer)
         {
-            IMQTTPacketSPtr pPacket = nullptr;
+            IMQTTPacketSPtr pPacket = MQTTFactory::getInstance()->createPacket(socketBuffer);
 
-            for (auto listener : m_listeners) {
-                listener->onMessageDelivered(pPacket);
+            if (pPacket != nullptr) {
+                for (auto listener : m_listeners) {
+                    listener->onMessageDelivered(pPacket);
+                }
+            } else {
+                // failed
             }
         }
 

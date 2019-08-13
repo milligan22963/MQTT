@@ -29,11 +29,13 @@ set(LIB_FILES
     src/MQTTPacket.cpp
     src/MQTTPacketOptions.cpp
     src/MQTTPingRequestPacket.cpp
+    src/MQTTPingResponsePacket.cpp
     src/MQTTProcessor.cpp
     src/MQTTPublishPacket.cpp
     src/MQTTPublishAckPacket.cpp
     src/MQTTPublishCompletedPacket.cpp
     src/MQTTPublishReceivedPacket.cpp
+    src/MQTTPublishReleasedPacket.cpp
     src/MQTTSubscribePacket.cpp
     src/MQTTSubscribeAckPacket.cpp
     src/MQTTTrackedPacket.cpp

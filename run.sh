@@ -35,8 +35,5 @@ if [ ! -d $BUILD_DIR ]; then
 fi
 
 cd $BUILD_DIR
-
-cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
-
-cores=`grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}'`
-make -j$cores
+rm -f core 
+./mqttClientTest

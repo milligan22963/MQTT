@@ -6,6 +6,7 @@
  */
 
 #include "MQTTClient.h"
+#include "MQTTFactory.h"
 
 namespace afm {
     namespace communications {
@@ -19,24 +20,22 @@ namespace afm {
             shutdown();
         }
 
-        bool MQTTClient::initialize(const MQTTOptions &options, IMQTTListenerSPtr pListener)
+        bool MQTTClient::initialize(const MQTTOptions &options)
         {
             bool success = false;
 
-            if (pListener != nullptr) {
-                m_pListener = pListener;
-                m_pProcessor = std::make_shared<MQTTProcessor>();
+            m_pProcessor = std::make_shared<MQTTProcessor>();
 
-                MQTTOptions clientOptions = options;
+            MQTTOptions clientOptions = options;
 
-                clientOptions[sc_processorType] = sc_mqttClient;
+            clientOptions[sc_processorType] = sc_mqttClient;
 
-                if (m_pProcessor->initialize(clientOptions) == true) {
-                    success = true;
-                } else {
-                    m_pProcessor->shutdown();
-                    m_pProcessor = nullptr;
-                }
+            if (m_pProcessor->initialize(clientOptions) == true) {
+                m_pProcessor->addListener(shared_from_this());
+                success = true;
+            } else {
+                m_pProcessor->shutdown();
+                m_pProcessor = nullptr;
             }
             return success;
         }
@@ -54,13 +53,20 @@ namespace afm {
                 m_pProcessor->shutdown();
                 m_pProcessor = nullptr;
             }
-            m_pListener = nullptr;
         }
 
         void MQTTClient::onConnected(bool success)
         {
             if (success == true) {
-                // send out any backlogged data
+                if (m_pProcessor != nullptr) {
+                    IMQTTPacketSPtr pConnectPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Connect);
+
+                    if (pConnectPacket != nullptr) {
+                        m_pProcessor->sendPacket(pConnectPacket);
+                    }
+                }
+            } else {
+                // we have been disconnected 
             }
         }
 

@@ -21,7 +21,7 @@ namespace afm {
         extern const std::string sc_mqttClient;
         extern const std::string sc_mqttServer;
         
-        class MQTTProcessor : public ISocketListener, std::enable_shared_from_this<MQTTProcessor>
+        class MQTTProcessor : public ISocketListener, public std::enable_shared_from_this<MQTTProcessor>
         {
             public:
                 MQTTProcessor();
@@ -29,8 +29,9 @@ namespace afm {
 
                 virtual bool initialize(const MQTTOptions &options);
 
-                virtual void addListener(IMQTTListenerSPtr &pListener);
-                virtual void removeListener(IMQTTListenerSPtr &pListener);
+                virtual bool sendPacket(const IMQTTPacketSPtr pPacket);
+                virtual void addListener(IMQTTListenerSPtr pListener);
+                virtual void removeListener(IMQTTListenerSPtr pListener);
 
                 /**
                  * ISocketListener interface implementation
