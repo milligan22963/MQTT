@@ -22,8 +22,6 @@ namespace afm {
         const std::string sc_mqttServer = "server";
 
         MQTTProcessor::MQTTProcessor()
-            : m_disconnectExpected(false)
-            , m_threadRunning(false)
         {
 
         }
@@ -46,8 +44,6 @@ namespace afm {
                 }
                 if (m_connection->initialize(options) == true) {
                     m_connection->addListener(shared_from_this());
-                    m_threadRunning = true;
-                    m_processingThread = std::thread(&MQTTProcessor::processing, shared_from_this());
                     success = true;
                 } else {
                     m_connection = nullptr;
@@ -71,8 +67,6 @@ namespace afm {
 
         bool MQTTProcessor::shutdown()
         {
-            bool success = false;
-
             m_listeners.clear();
 
             if (m_connection != nullptr) {
@@ -81,33 +75,24 @@ namespace afm {
                 m_connection = nullptr;
             }
 
-            if (m_threadRunning != false) {
-                std::cout << "Shutting down thread\n";
-                m_threadRunning = false;
-                m_processingThread.join();
-                success = true;
-            }
-            return success;
+            return true;
         }
 
-        void MQTTProcessor::addListener(IMQTTListenerSPtr pListener)
+        void MQTTProcessor::addListener(IMQTTProcessListenerSPtr pListener)
         {
             m_listeners.push_back(pListener);
         }
 
-        void MQTTProcessor::removeListener(IMQTTListenerSPtr pListener)
+        void MQTTProcessor::removeListener(IMQTTProcessListenerSPtr pListener)
         {
             m_listeners.remove(pListener);
         }
 
         void MQTTProcessor::onConnected()
         {
-            std::cout << "We are connected to the other end...\n";
             // Inform of socket level connection
-            for (auto listener : m_listeners)
-            {
-                std::cout << "Informing users\n";
-                listener->onConnected(true);
+            for (auto listener : m_listeners) {
+                listener->onConnected();
             }
         }
 
@@ -140,31 +125,15 @@ namespace afm {
 
         void MQTTProcessor::onError(int socketError)
         {
-            onDisconnected();
+            for (auto listener : m_listeners) {
+                listener->onError();
+            }
         }
 
         void MQTTProcessor::onDisconnected()
         {
-            // disconnect is state for mqtt so
-            // we want to differentiate between a requested
-            // disconnect opposed to a unexpected one
-            if (m_disconnectExpected == false) {
-                for (auto listener : m_listeners) {
-                    listener->onConnected(false);
-                }
-            } else {
-                m_disconnectExpected = false; // shouldn't always expect it
-                for (auto listener : m_listeners) {
-                    listener->onDisconnected(true);
-                }
-            }
-        }
-
-        // internals
-        void MQTTProcessor::processing()
-        {
-            while (m_threadRunning == true) {
-                sleep(1); // for testing
+            for (auto listener : m_listeners) {
+                listener->onDisconnected();
             }
         }
     }

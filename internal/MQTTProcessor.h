@@ -10,10 +10,9 @@
 
 #include <atomic>
 #include <list>
-#include <thread>
 #include "IAfmSocket.h"
 #include "ISocketListener.h"
-#include "IMQTTListener.h"
+#include "IMQTTProcessorListener.h"
 
 namespace afm {
     namespace communications {
@@ -30,8 +29,8 @@ namespace afm {
                 virtual bool initialize(const MQTTOptions &options);
 
                 virtual bool sendPacket(const IMQTTPacketSPtr pPacket);
-                virtual void addListener(IMQTTListenerSPtr pListener);
-                virtual void removeListener(IMQTTListenerSPtr pListener);
+                virtual void addListener(IMQTTProcessListenerSPtr pListener);
+                virtual void removeListener(IMQTTProcessListenerSPtr pListener);
 
                 /**
                  * ISocketListener interface implementation
@@ -48,11 +47,8 @@ namespace afm {
                 void processing();
 
             private:
-                std::atomic<bool>               m_disconnectExpected;
-                std::atomic<bool>               m_threadRunning;
-                std::thread                     m_processingThread;
-                IAfmSocketSPtr                  m_connection = nullptr;
-                std::list<IMQTTListenerSPtr>    m_listeners;
+                IAfmSocketSPtr                      m_connection = nullptr;
+                std::list<IMQTTProcessListenerSPtr> m_listeners;
         };
 
         using MQTTProcessorSPtr = std::shared_ptr<MQTTProcessor>;

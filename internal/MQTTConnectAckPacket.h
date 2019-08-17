@@ -13,12 +13,12 @@
 namespace afm {
     namespace communications {
         enum ConnectionResponse  : uint8_t {
-            ConnectionResponse_Accepted = 0x00,
-            ConnectionResponse_Refused_ProtocolVersion,
-            ConnectionResponse_Refused_ClientId,
-            ConnectionResponse_Refused_ServerUnavailable,
-            ConnectionResponse_Refused_UserCredentials,
-            ConnectionResponse_Refused_NotAuthorized,
+            eConnectionResponse_Accepted = 0x00,
+            eConnectionResponse_Refused_ProtocolVersion,
+            eConnectionResponse_Refused_ClientId,
+            eConnectionResponse_Refused_ServerUnavailable,
+            eConnectionResponse_Refused_UserCredentials,
+            eConnectionResponse_Refused_NotAuthorized,
             EndConnectionResponses
         };
 
@@ -29,6 +29,8 @@ namespace afm {
                 virtual ~MQTTConnectAckPacket();
 
                 virtual bool initialize(const MQTTOptions &options) override;
+
+                ConnectionResponse getResponse() const { return m_connectionResponse; }
 
             protected:
                 virtual uint32_t getVariableLength();

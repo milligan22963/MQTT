@@ -5,6 +5,7 @@
  * 
  */
 
+#include <iostream>
 #include "MQTTPacket.h"
 
 namespace afm {
@@ -66,9 +67,10 @@ namespace afm {
             m_type = (MQTTPacketType)fixedHeader.header.values.packetType;
             m_flags = fixedHeader.header.values.flags;
 
-            uint32_t offset = sizeof(MQTTFixedHeader) + 1;
+            uint32_t offset = sizeof(MQTTFixedHeader);
 
             uint32_t length = 0;
+
             offset += decodeVariableLength(buffer, length);
 
             return decodePayload(buffer, offset, length);
@@ -165,7 +167,7 @@ namespace afm {
             uint8_t bytesConsumed = 0;
             variableLength = 0;
             uint8_t multiplier = 1;
-            const uint8_t *pValue = buffer.data();
+            const uint8_t *pValue = buffer.data(); // starts at front but first moves to the start
             do {
                 pValue++;
                 bytesConsumed++;
@@ -175,6 +177,9 @@ namespace afm {
                     break;
                 }
             } while (*pValue & 128);
+
+            //std::cout << "variableLength: " << (int)variableLength;
+            //std::cout << "\nbytesConsumed: " << (int)bytesConsumed << "\n";
 
             return bytesConsumed;
         }

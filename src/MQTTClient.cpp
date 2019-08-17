@@ -5,8 +5,10 @@
  * 
  */
 
+#include <iostream>
 #include "MQTTClient.h"
 #include "MQTTFactory.h"
+#include "MQTTConnectAckPacket.h"
 
 namespace afm {
     namespace communications {
@@ -20,7 +22,7 @@ namespace afm {
             shutdown();
         }
 
-        bool MQTTClient::initialize(const MQTTOptions &options)
+        bool MQTTClient::initialize(const MQTTOptions &options, IMQTTListenerSPtr pListener)
         {
             bool success = false;
 
@@ -32,6 +34,7 @@ namespace afm {
 
             if (m_pProcessor->initialize(clientOptions) == true) {
                 m_pProcessor->addListener(shared_from_this());
+                m_pListener = pListener;
                 success = true;
             } else {
                 m_pProcessor->shutdown();
@@ -55,44 +58,67 @@ namespace afm {
             }
         }
 
-        void MQTTClient::onConnected(bool success)
+        void MQTTClient::onConnected()
         {
-            if (success == true) {
-                if (m_pProcessor != nullptr) {
-                    IMQTTPacketSPtr pConnectPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Connect);
+            IMQTTPacketSPtr pConnectPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Connect);
 
-                    if (pConnectPacket != nullptr) {
-                        m_pProcessor->sendPacket(pConnectPacket);
-                    }
+            if (pConnectPacket != nullptr) {
+                MQTTOptions connectOptions;
+
+                connectOptions[sc_clientId] = "afmTest";
+                if (pConnectPacket->initialize(connectOptions) == true) {
+                    m_currentState = MQTTState::eMQTTConnection_Requested;
+                    m_pProcessor->sendPacket(pConnectPacket);
+                } else {
+                    // error
                 }
-            } else {
-                // we have been disconnected 
             }
-        }
-
-        void MQTTClient::onSubscriptionAdded(bool success)
-        {
-
-        }
-
-        void MQTTClient::onSubscriptionRemoved(bool success)
-        {
-
-        }
-
-        void MQTTClient::onDisconnected(bool success)
-        {
-            // start backlogging
         }
 
         void MQTTClient::onMessageReceived(IMQTTPacketSPtr pPacket)
         {
+            // check state to see if we are waiting on something...such as a connection request etc
+            switch (pPacket->getType()) {
+                case MQTTPacketType::MQTT_ConnectAck:
+                {
+                    MQTTConnectAckPacketSPtr pAckPacket = std::dynamic_pointer_cast<MQTTConnectAckPacket>(pPacket);
 
+                    MQTTState newState = MQTTState::eMQTTConnection_Failed;
+
+                    if (m_currentState == MQTTState::eMQTTConnection_Requested) {
+                        if (pAckPacket != nullptr) {
+                            if (pAckPacket->getResponse() == ConnectionResponse::eConnectionResponse_Accepted) {
+                                newState = MQTTState::eMQTTConnection_Success;
+                            }
+                        }
+                    }
+
+                    if (m_pListener != nullptr) {
+                        m_pListener->onConnected(newState == MQTTState::eMQTTConnection_Success);
+                    }
+                    m_currentState = newState;
+                }
+                break;
+                default:
+                {
+                    // unhandled at the moment
+                }
+                break;
+            }
         }
 
         void MQTTClient::onMessageDelivered(IMQTTPacketSPtr pPacket)
         {
 
         }
+
+        void MQTTClient::onDisconnected()
+        {
+        }
+
+        void MQTTClient::onError()
+        {
+        }
+
     }
 }

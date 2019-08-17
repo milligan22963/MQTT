@@ -5,6 +5,7 @@
  * 
  */
 
+#include <iostream>
 #include <set>
 
 #include "JSONUtil.h"
