@@ -26,6 +26,11 @@ namespace afm {
 
         using MQTTBuffer = std::vector<uint8_t>;
         using MQTTOptions = nlohmann::json;
+
+        struct MQTTSubscription {
+            MQTTBuffer topic;
+            MQTT_QOS qos;
+        };
     }
 }
 #endif

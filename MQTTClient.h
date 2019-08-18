@@ -35,6 +35,10 @@ namespace afm {
                 virtual ~MQTTClient();
 
                 virtual bool initialize(const MQTTOptions &options, IMQTTListenerSPtr pListener);
+                virtual bool addSubscription(const MQTTSubscription &subscription);
+                virtual bool removeSubscription(const MQTTSubscription &subscription);
+                virtual bool subscribe();
+                virtual bool unsubscribe();
                 virtual bool sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos);
                 virtual void shutdown();
 
@@ -48,9 +52,11 @@ namespace afm {
                 virtual void onError() override;
 
             private:
-                IMQTTListenerSPtr   m_pListener = nullptr;
-                MQTTProcessorSPtr   m_pProcessor = nullptr;
-                MQTTState           m_currentState = MQTTState::eEndMQTTStates;
+                uint64_t                        m_nextMessageId = 0;
+                std::vector<MQTTSubscription>   m_subscriptions;
+                IMQTTListenerSPtr               m_pListener = nullptr;
+                MQTTProcessorSPtr               m_pProcessor = nullptr;
+                MQTTState                       m_currentState = MQTTState::eEndMQTTStates;
         };
 
         using MQTTClientSPtr = std::shared_ptr<MQTTClient>;

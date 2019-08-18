@@ -13,11 +13,6 @@
 
 namespace afm {
     namespace communications {
-        struct MQTTSubscription {
-            MQTTBuffer topic;
-            MQTT_QOS qos;
-        };
-
         class MQTTSubscribePacket : public MQTTTrackedPacket
         {
             public:

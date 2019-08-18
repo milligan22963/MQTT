@@ -40,6 +40,18 @@ namespace afm {
             return results.find(false) == results.end() ? true : false;
         }
 
+        bool MQTTSubscribeAckPacket::subscriptionSuccess() const
+        {
+            bool success = true;
+
+            for (auto status : m_subscriptionStatus) {
+                if (status == MQTT_QOS::MQTT_QOS_FAILURE) {
+                    success = false;
+                }
+            }
+            return success;
+        }
+
         /**
          * Internal parts
          */

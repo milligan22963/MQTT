@@ -9,6 +9,7 @@
 #include "MQTTClient.h"
 #include "MQTTFactory.h"
 #include "MQTTConnectAckPacket.h"
+#include "MQTTSubscribeAckPacket.h"
 
 namespace afm {
     namespace communications {
@@ -41,6 +42,53 @@ namespace afm {
                 m_pProcessor = nullptr;
             }
             return success;
+        }
+
+        bool MQTTClient::addSubscription(const MQTTSubscription &subscription)
+        {
+            m_subscriptions.push_back(subscription);
+
+            return true;
+        }
+
+        bool MQTTClient::removeSubscription(const MQTTSubscription &subscription)
+        {
+            m_subscriptions.push_back(subscription);
+
+            return true;
+        }
+
+        bool MQTTClient::subscribe()
+        {
+            bool success = false;
+
+            MQTTOptions subscribeOptions;
+
+            subscribeOptions[sc_optionMessageId] = (uint16_t)m_nextMessageId++;
+            subscribeOptions[sc_subscriptions] = MQTTOptions::array();
+            for (auto subscription : m_subscriptions) {
+                subscribeOptions[sc_subscriptions].push_back(
+                    {
+                        {sc_topic, subscription.topic},
+                        {sc_qosLevel, subscription.qos}
+                    }
+                );
+            }
+
+            IMQTTPacketSPtr pPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Subscribe);
+
+            if (pPacket->initialize(subscribeOptions) == true) {
+                m_currentState = MQTTState::eMQTTSubscription_Requested;
+                m_pProcessor->sendPacket(pPacket);
+                success = true;
+            }
+
+            return success;
+        }
+
+        bool MQTTClient::unsubscribe()
+        {
+            return false;
         }
 
         bool MQTTClient::sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos)
@@ -97,6 +145,23 @@ namespace afm {
                         m_pListener->onConnected(newState == MQTTState::eMQTTConnection_Success);
                     }
                     m_currentState = newState;
+                }
+                break;
+                case MQTTPacketType::MQTT_SubscribeAck:
+                {
+                    MQTTSubscribeAckPacketSPtr pAckPacket = std::dynamic_pointer_cast<MQTTSubscribeAckPacket>(pPacket);
+
+                    if (pAckPacket != nullptr) {
+                        m_currentState = pAckPacket->subscriptionSuccess() == true
+                            ? MQTTState::eMQTTSubscription_Success
+                            : MQTTState::eMQTTSubscription_Failed;
+                    } else {
+                        m_currentState = MQTTState::eMQTTSubscription_Failed;
+                    }
+
+                    if (m_pListener != nullptr) {
+                        m_pListener->onSubscriptionAdded(m_currentState == MQTTState::eMQTTSubscription_Success);
+                    }
                 }
                 break;
                 default:

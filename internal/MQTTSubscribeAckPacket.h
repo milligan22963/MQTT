@@ -20,6 +20,8 @@ namespace afm {
 
                 virtual bool initialize(const MQTTOptions &options) override;
 
+                bool subscriptionSuccess() const;
+
             protected:
                 virtual uint32_t getVariableLength();
                 virtual bool encodePayload(MQTTBuffer &buffer);
