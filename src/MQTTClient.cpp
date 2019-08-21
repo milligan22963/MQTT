@@ -6,6 +6,8 @@
  */
 
 #include <iostream>
+#include <unistd.h>
+
 #include "MQTTClient.h"
 #include "MQTTFactory.h"
 #include "MQTTConnectAckPacket.h"
@@ -14,6 +16,8 @@
 namespace afm {
     namespace communications {
         MQTTClient::MQTTClient()
+            : m_keepProcessing(false)
+            , m_currentState(MQTTState::eEndMQTTStates)
         {
 
         }
@@ -36,6 +40,10 @@ namespace afm {
             if (m_pProcessor->initialize(clientOptions) == true) {
                 m_pProcessor->addListener(shared_from_this());
                 m_pListener = pListener;
+
+                m_keepProcessing = true;
+                m_stateProcessor = std::thread(&MQTTClient::process, shared_from_this());
+
                 success = true;
             } else {
                 m_pProcessor->shutdown();
@@ -100,6 +108,9 @@ namespace afm {
 
         void MQTTClient::shutdown()
         {
+            m_keepProcessing = false;
+            m_stateProcessor.join();
+
             if (m_pProcessor != nullptr) {
                 m_pProcessor->shutdown();
                 m_pProcessor = nullptr;
@@ -164,6 +175,15 @@ namespace afm {
                     }
                 }
                 break;
+                case MQTTPacketType::MQTT_Publish:
+                {
+                    IMQTTPacketSPtr pAckPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_PublishAck);
+
+                    if (m_pListener != nullptr) {
+                        m_pListener->onMessageReceived(pPacket);
+                    }
+                }
+                break;
                 default:
                 {
                     // unhandled at the moment
@@ -185,5 +205,37 @@ namespace afm {
         {
         }
 
+        void MQTTClient::process()
+        {
+            while (m_keepProcessing == true) {
+                switch (m_currentState)
+                {
+                    case MQTTState::eMQTTConnection_Requested:
+                    case MQTTState::eMQTTConnection_Failed:
+                    {
+                        // reconnect time out?
+                    }
+                    break;
+                    case MQTTState::eMQTTConnection_Success:
+                    {
+                        if (m_subscriptions.empty() == false) {
+                            subscribe();
+                        }
+                    }
+                    break;
+                    case MQTTState::eMQTTSubscription_Requested:
+                    {
+
+                    }
+                    break;
+                    default:
+                    {
+
+                    }
+                    break;
+                }
+                sleep(1);
+            }
+        }
     }
 }

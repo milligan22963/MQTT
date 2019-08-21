@@ -35,7 +35,11 @@ class TestClient : public IMQTTListener, std::enable_shared_from_this<TestClient
         }
         virtual void onSubscriptionAdded(bool success)  override
         {
-
+            if (success == true) {
+                std::cout << "Successfully added subscription.\n";
+            } else {
+                std::cout << "Failed to add subscription\n";
+            }
         }
 
         virtual void onSubscriptionRemoved(bool success) override
@@ -50,12 +54,12 @@ class TestClient : public IMQTTListener, std::enable_shared_from_this<TestClient
 
         virtual void onMessageReceived(const IMQTTPacketSPtr pPacket) override
         {
-
+            std::cout << "Message for you sir.\n";
         }
 
         virtual void onMessageDelivered(const IMQTTPacketSPtr pPacket) override
         {
-
+            std::cout << "Checks in the mail\n";
         }
 };
 
@@ -83,6 +87,16 @@ int main(int argc, char *argv[])
         std::cout << "Initialized\n";
 
         signal(SIGINT, programInterrupt);
+
+        std::cout << "Creating subscriptions\n";
+        // Add subscriptions
+        MQTTSubscription subscription;
+
+        std::string myTopic = "test/123";
+        subscription.topic = MQTTBuffer(myTopic.begin(), myTopic.end());
+        subscription.qos = MQTT_QOS::MQTT_QOS_0;
+
+        pMQTTClient->addSubscription(subscription);
 
         // Now to wait until something tells us to stop waiting
         while (g_done == false) {

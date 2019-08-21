@@ -8,6 +8,8 @@
 #ifndef _H_MQTTCLIENT
 #define _H_MQTTCLIENT
 
+#include <atomic>
+#include <thread>
 #include "IMQTTListener.h"
 #include "IMQTTProcessorListener.h"
 #include "MQTTProcessor.h"
@@ -37,8 +39,6 @@ namespace afm {
                 virtual bool initialize(const MQTTOptions &options, IMQTTListenerSPtr pListener);
                 virtual bool addSubscription(const MQTTSubscription &subscription);
                 virtual bool removeSubscription(const MQTTSubscription &subscription);
-                virtual bool subscribe();
-                virtual bool unsubscribe();
                 virtual bool sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos);
                 virtual void shutdown();
 
@@ -51,12 +51,19 @@ namespace afm {
                 virtual void onDisconnected() override;
                 virtual void onError() override;
 
+            protected:
+                bool subscribe();
+                bool unsubscribe();
+                void process();
+
             private:
+                std::atomic<bool>               m_keepProcessing;
+                std::thread                     m_stateProcessor;   
                 uint64_t                        m_nextMessageId = 0;
                 std::vector<MQTTSubscription>   m_subscriptions;
                 IMQTTListenerSPtr               m_pListener = nullptr;
                 MQTTProcessorSPtr               m_pProcessor = nullptr;
-                MQTTState                       m_currentState = MQTTState::eEndMQTTStates;
+                std::atomic<MQTTState>          m_currentState;
         };
 
         using MQTTClientSPtr = std::shared_ptr<MQTTClient>;
