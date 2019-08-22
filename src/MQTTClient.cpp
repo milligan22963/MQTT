@@ -6,8 +6,8 @@
  */
 
 #include <iostream>
-#include <unistd.h>
 
+#include "JSONUtil.h"
 #include "MQTTClient.h"
 #include "MQTTFactory.h"
 #include "MQTTConnectAckPacket.h"
@@ -32,6 +32,8 @@ namespace afm {
             bool success = false;
 
             m_pProcessor = std::make_shared<MQTTProcessor>();
+
+            extractValue(options, sc_keepAlive, m_keepAliveTime);
 
             MQTTOptions clientOptions = options;
 
@@ -125,9 +127,11 @@ namespace afm {
                 MQTTOptions connectOptions;
 
                 connectOptions[sc_clientId] = "afmTest";
+                connectOptions[sc_keepAlive] = m_keepAliveTime;
                 if (pConnectPacket->initialize(connectOptions) == true) {
                     m_currentState = MQTTState::eMQTTConnection_Requested;
                     m_pProcessor->sendPacket(pConnectPacket);
+                    m_lock.wake();
                 } else {
                     // error
                 }
@@ -156,6 +160,7 @@ namespace afm {
                         m_pListener->onConnected(newState == MQTTState::eMQTTConnection_Success);
                     }
                     m_currentState = newState;
+                    m_lock.wake();
                 }
                 break;
                 case MQTTPacketType::MQTT_SubscribeAck:
@@ -173,6 +178,7 @@ namespace afm {
                     if (m_pListener != nullptr) {
                         m_pListener->onSubscriptionAdded(m_currentState == MQTTState::eMQTTSubscription_Success);
                     }
+                    m_lock.wake();
                 }
                 break;
                 case MQTTPacketType::MQTT_Publish:
@@ -208,9 +214,15 @@ namespace afm {
         void MQTTClient::process()
         {
             while (m_keepProcessing == true) {
+                m_lock.wait();
+
                 switch (m_currentState)
                 {
                     case MQTTState::eMQTTConnection_Requested:
+                    {
+                        // start timer for connection timeout
+                    }
+                    break;
                     case MQTTState::eMQTTConnection_Failed:
                     {
                         // reconnect time out?
@@ -218,6 +230,7 @@ namespace afm {
                     break;
                     case MQTTState::eMQTTConnection_Success:
                     {
+                        // if we have subscriptions then make it so
                         if (m_subscriptions.empty() == false) {
                             subscribe();
                         }
@@ -228,13 +241,17 @@ namespace afm {
 
                     }
                     break;
+                    case MQTTState::eMQTTSubscription_Success:
+                    {
+                        // we succeeded
+                    }
+                    break;
                     default:
                     {
 
                     }
                     break;
                 }
-                sleep(1);
             }
         }
     }

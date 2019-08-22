@@ -13,6 +13,7 @@
 #include "IMQTTListener.h"
 #include "IMQTTProcessorListener.h"
 #include "MQTTProcessor.h"
+#include "ProcessLock.h"
 
 namespace afm {
     namespace communications {
@@ -57,6 +58,7 @@ namespace afm {
                 void process();
 
             private:
+                uint16_t                        m_keepAliveTime = 0;
                 std::atomic<bool>               m_keepProcessing;
                 std::thread                     m_stateProcessor;   
                 uint64_t                        m_nextMessageId = 0;
@@ -64,6 +66,7 @@ namespace afm {
                 IMQTTListenerSPtr               m_pListener = nullptr;
                 MQTTProcessorSPtr               m_pProcessor = nullptr;
                 std::atomic<MQTTState>          m_currentState;
+                common::ProcessLock             m_lock;
         };
 
         using MQTTClientSPtr = std::shared_ptr<MQTTClient>;

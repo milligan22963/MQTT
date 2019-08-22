@@ -21,6 +21,7 @@ set(AFM_SOCKET_INCLUDE ${CMAKE_SOURCE_DIR}/../afmSocket)
 set(AFM_SOCKET_LIB ${CMAKE_SOURCE_DIR}/../afmSocket/cmake-release)
 
 set(LIB_FILES
+    src/ProcessLock.cpp
     src/MQTTClient.cpp
     src/MQTTConnectPacket.cpp
     src/MQTTConnectAckPacket.cpp
