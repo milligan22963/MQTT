@@ -19,6 +19,7 @@ namespace afm {
             : m_keepProcessing(false)
             , m_currentState(MQTTState::eEndMQTTStates)
             , m_isConnected(false)
+            , m_subscribeOnConnect(false)
         {
 
         }
@@ -58,49 +59,78 @@ namespace afm {
 
         bool MQTTClient::addSubscription(const MQTTSubscription &subscription)
         {
-            m_subscriptions.push_back(subscription);
+            m_subscriptionsToAdd.push_back(subscription);
 
             return true;
         }
 
         bool MQTTClient::removeSubscription(const MQTTSubscription &subscription)
         {
-            m_subscriptions.push_back(subscription);
+            m_subscriptionsToRemove.push_back(subscription);
 
             return true;
         }
 
-        bool MQTTClient::subscribe()
+        bool MQTTClient::subscribe(bool subscribeOnConnect)
         {
             bool success = false;
 
-            MQTTOptions subscribeOptions;
+            m_subscribeOnConnect = subscribeOnConnect;
 
-            subscribeOptions[sc_optionMessageId] = (uint16_t)m_nextMessageId++;
-            subscribeOptions[sc_subscriptions] = MQTTOptions::array();
-            for (auto subscription : m_subscriptions) {
-                subscribeOptions[sc_subscriptions].push_back(
-                    {
-                        {sc_topic, subscription.topic},
-                        {sc_qosLevel, subscription.qos}
-                    }
-                );
+            if (m_isConnected == true) {
+                MQTTOptions subscribeOptions;
+
+                subscribeOptions[sc_optionMessageId] = (uint16_t)m_nextMessageId++;
+                subscribeOptions[sc_subscriptions] = MQTTOptions::array();
+                for (auto subscription : m_subscriptionsToAdd) {
+                    subscribeOptions[sc_subscriptions].push_back(
+                        {
+                            {sc_topic, subscription.topic},
+                            {sc_qosLevel, subscription.qos}
+                        }
+                    );
+                }
+
+                IMQTTPacketSPtr pPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Subscribe);
+
+                if (pPacket->initialize(subscribeOptions) == true) {
+                    m_currentState = MQTTState::eMQTTSubscription_Requested;
+                    m_pProcessor->sendPacket(pPacket);
+                    success = true;
+                }
+            } else {
+                success = subscribeOnConnect; // true if we are doing it later
             }
-
-            IMQTTPacketSPtr pPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Subscribe);
-
-            if (pPacket->initialize(subscribeOptions) == true) {
-                m_currentState = MQTTState::eMQTTSubscription_Requested;
-                m_pProcessor->sendPacket(pPacket);
-                success = true;
-            }
-
             return success;
         }
 
         bool MQTTClient::unsubscribe()
         {
-            return false;
+            bool success = false;
+
+            if (m_isConnected == true) {
+                MQTTOptions unsubscribeOptions;
+
+                unsubscribeOptions[sc_optionMessageId] = (uint16_t)m_nextMessageId++;
+                unsubscribeOptions[sc_subscriptions] = MQTTOptions::array();
+                for (auto subscription : m_subscriptionsToRemove) {
+                    unsubscribeOptions[sc_subscriptions].push_back(
+                        {
+                            {sc_topic, subscription.topic}
+                        }
+                    );
+                }
+
+                IMQTTPacketSPtr pPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_UnSubscribe);
+
+                if (pPacket->initialize(unsubscribeOptions) == true) {
+                    m_currentState = MQTTState::eMQTTUnSubscribe_Requested;
+                    m_pProcessor->sendPacket(pPacket);
+                    success = true;
+                }
+
+            }
+            return success;
         }
 
         bool MQTTClient::sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos)
@@ -118,10 +148,14 @@ namespace afm {
 
                 m_stateProcessor.join();
             }
+
             if (m_pProcessor != nullptr) {
                 m_pProcessor->shutdown();
                 m_pProcessor = nullptr;
             }
+
+            m_subscriptionsToAdd.clear();
+            m_subscriptionsToRemove.clear();
         }
 
         void MQTTClient::onConnected()
@@ -169,6 +203,15 @@ namespace afm {
 
                     if (m_pListener != nullptr) {
                         m_pListener->onSubscriptionAdded(m_currentState == MQTTState::eMQTTSubscription_Success);
+                    }
+                }
+                break;
+                case MQTTPacketType::MQTT_UnSubscribeAck:
+                {
+                     m_currentState = MQTTState::eMQTTUnSubscribe_Success;
+
+                    if (m_pListener != nullptr) {
+                        m_pListener->onSubscriptionRemoved(m_currentState == MQTTState::eMQTTUnSubscribe_Success);
                     }
                 }
                 break;
@@ -283,10 +326,11 @@ namespace afm {
                     {
                         waitingForConnection = false; // we have it
                         // if we have subscriptions then make it so
-                        if (m_subscriptions.empty() == false) {
-                            subscribe();
+                        if (m_subscribeOnConnect == true) {
+                            subscribe(m_subscribeOnConnect);
                         } else {
                             m_currentState = MQTTState::eMQTTConnection_Active;
+                            nextTimeOut = std::chrono::steady_clock::now() + keepAliveTime;
                         }
 
                         // start the keep alive time 

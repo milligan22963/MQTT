@@ -22,10 +22,13 @@ namespace afm {
             eMQTTConnection_Requested,
             eMQTTConnection_Success,
             eMQTTConnection_Failed,
+            eMQTTConnection_Active,
             eMQTTSubscription_Requested,
             eMQTTSubscription_Success,
             eMQTTSubscription_Failed,
-            eMQTTConnection_Active,
+            eMQTTUnSubscribe_Requested,
+            eMQTTUnSubscribe_Success,
+            eMQTTUnSubscribe_Failed,
             eMQTTDisconnect_Requested,
             eMQTTDisconnect_Success,
             eMQTTDisconnect_Failed,
@@ -39,8 +42,12 @@ namespace afm {
                 virtual ~MQTTClient();
 
                 virtual bool initialize(const MQTTOptions &options, IMQTTListenerSPtr pListener);
+
                 virtual bool addSubscription(const MQTTSubscription &subscription);
+                virtual bool subscribe(bool subscribeOnConnect);
+
                 virtual bool removeSubscription(const MQTTSubscription &subscription);
+                virtual bool unsubscribe();
                 virtual bool sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos);
                 virtual void shutdown();
 
@@ -54,8 +61,6 @@ namespace afm {
                 virtual void onError() override;
 
             protected:
-                bool subscribe();
-                bool unsubscribe();
                 void sendConnect();
                 void sendKeepAlive();
                 void process();
@@ -66,11 +71,13 @@ namespace afm {
                 std::atomic<bool>               m_keepProcessing;
                 std::thread                     m_stateProcessor;   
                 uint64_t                        m_nextMessageId = 0;
-                std::vector<MQTTSubscription>   m_subscriptions;
+                std::vector<MQTTSubscription>   m_subscriptionsToAdd;
+                std::vector<MQTTSubscription>   m_subscriptionsToRemove;
                 IMQTTListenerSPtr               m_pListener = nullptr;
                 MQTTProcessorSPtr               m_pProcessor = nullptr;
                 std::atomic<MQTTState>          m_currentState;
                 std::atomic<bool>               m_isConnected;
+                std::atomic<bool>               m_subscribeOnConnect;
                 common::ProcessLock             m_lock;
         };
 

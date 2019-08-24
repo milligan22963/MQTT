@@ -99,6 +99,7 @@ int main(int argc, char *argv[])
         subscription.qos = MQTT_QOS::MQTT_QOS_0;
 
         pMQTTClient->addSubscription(subscription);
+        pMQTTClient->subscribe(true);
 
         // Now to wait until something tells us to stop waiting
         while (g_done == false) {
