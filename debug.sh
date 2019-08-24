@@ -6,7 +6,7 @@ usage()
 {
     echo "Usage: $0"
     echo "  -t (--type) - indicates the build type, Release or Debug"
-    echo "  -h (--help) - print this usage statement"
+    ech0 "  -h (--help) - print this usage statement"
 }
 
 while [ "$1" != "" ]; do
@@ -35,8 +35,4 @@ if [ ! -d $BUILD_DIR ]; then
 fi
 
 cd $BUILD_DIR
-
-cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
-
-cores=`grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}'`
-make -j$cores
+gdb mqttClientTest core

@@ -39,6 +39,7 @@ namespace afm {
                 void wait();
                 std::cv_status waitFor(std::chrono::steady_clock::duration waitTime);
                 std::cv_status waitUntil(std::chrono::system_clock::time_point waitTime);
+                std::cv_status waitUntil(std::chrono::steady_clock::time_point waitTime);
 
             private:
                 std::mutex                      m_processMutex;

@@ -18,6 +18,7 @@ namespace afm {
         MQTTClient::MQTTClient()
             : m_keepProcessing(false)
             , m_currentState(MQTTState::eEndMQTTStates)
+            , m_isConnected(false)
         {
 
         }
@@ -34,6 +35,7 @@ namespace afm {
             m_pProcessor = std::make_shared<MQTTProcessor>();
 
             extractValue(options, sc_keepAlive, m_keepAliveTime);
+            extractValue(options, sc_clientId, m_clientId);
 
             MQTTOptions clientOptions = options;
 
@@ -110,9 +112,12 @@ namespace afm {
 
         void MQTTClient::shutdown()
         {
-            m_keepProcessing = false;
-            m_stateProcessor.join();
+            if (m_keepProcessing == true) {
+                m_keepProcessing = false;
+                m_lock.wake();
 
+                m_stateProcessor.join();
+            }
             if (m_pProcessor != nullptr) {
                 m_pProcessor->shutdown();
                 m_pProcessor = nullptr;
@@ -121,21 +126,8 @@ namespace afm {
 
         void MQTTClient::onConnected()
         {
-            IMQTTPacketSPtr pConnectPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Connect);
-
-            if (pConnectPacket != nullptr) {
-                MQTTOptions connectOptions;
-
-                connectOptions[sc_clientId] = "afmTest";
-                connectOptions[sc_keepAlive] = m_keepAliveTime;
-                if (pConnectPacket->initialize(connectOptions) == true) {
-                    m_currentState = MQTTState::eMQTTConnection_Requested;
-                    m_pProcessor->sendPacket(pConnectPacket);
-                    m_lock.wake();
-                } else {
-                    // error
-                }
-            }
+            sendConnect();
+            m_lock.wake();
         }
 
         void MQTTClient::onMessageReceived(IMQTTPacketSPtr pPacket)
@@ -152,6 +144,7 @@ namespace afm {
                         if (pAckPacket != nullptr) {
                             if (pAckPacket->getResponse() == ConnectionResponse::eConnectionResponse_Accepted) {
                                 newState = MQTTState::eMQTTConnection_Success;
+                                m_isConnected = true;
                             }
                         }
                     }
@@ -160,7 +153,6 @@ namespace afm {
                         m_pListener->onConnected(newState == MQTTState::eMQTTConnection_Success);
                     }
                     m_currentState = newState;
-                    m_lock.wake();
                 }
                 break;
                 case MQTTPacketType::MQTT_SubscribeAck:
@@ -178,7 +170,6 @@ namespace afm {
                     if (m_pListener != nullptr) {
                         m_pListener->onSubscriptionAdded(m_currentState == MQTTState::eMQTTSubscription_Success);
                     }
-                    m_lock.wake();
                 }
                 break;
                 case MQTTPacketType::MQTT_Publish:
@@ -190,12 +181,18 @@ namespace afm {
                     }
                 }
                 break;
+                case MQTTPacketType::MQTT_PingResponse:
+                {
+                    // glad they got it
+                }
+                break;
                 default:
                 {
                     // unhandled at the moment
                 }
                 break;
             }
+            m_lock.wake();
         }
 
         void MQTTClient::onMessageDelivered(IMQTTPacketSPtr pPacket)
@@ -205,35 +202,94 @@ namespace afm {
 
         void MQTTClient::onDisconnected()
         {
+            m_isConnected = false;
+
+            m_lock.wake();
         }
 
         void MQTTClient::onError()
         {
+            m_isConnected = false;
+
+            m_lock.wake();
+        }
+
+        void MQTTClient::sendConnect()
+        {
+            IMQTTPacketSPtr pConnectPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Connect);
+
+            if (pConnectPacket != nullptr) {
+                MQTTOptions connectOptions;
+
+                connectOptions[sc_clientId] = m_clientId;
+                connectOptions[sc_keepAlive] = m_keepAliveTime;
+                if (pConnectPacket->initialize(connectOptions) == true) {
+                    m_isConnected = false;
+                    m_currentState = MQTTState::eMQTTConnection_Requested;
+                    m_pProcessor->sendPacket(pConnectPacket);
+                } else {
+                    // error
+                }
+            }
+        }
+
+        void MQTTClient::sendKeepAlive()
+        {
+            if (m_isConnected == true) {
+                IMQTTPacketSPtr pKeepAlivePacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_PingRequest);
+                MQTTOptions options;
+
+                if (pKeepAlivePacket->initialize(options) == true) {
+                    m_pProcessor->sendPacket(pKeepAlivePacket);
+                } else {
+                    // error
+                }
+            }
         }
 
         void MQTTClient::process()
         {
-            while (m_keepProcessing == true) {
-                m_lock.wait();
+            bool timeoutOccurred = false;
+            bool waitingForConnection = false;
+            bool hasKeepAlive = m_keepAliveTime == 0 ? false : true;
+            std::chrono::seconds connectionTimeout = std::chrono::seconds(30);
+            std::chrono::seconds keepAliveTime;
 
-                switch (m_currentState)
-                {
+            if (hasKeepAlive == true) {
+                keepAliveTime = std::chrono::seconds(m_keepAliveTime);
+            } else {
+                keepAliveTime = connectionTimeout; // sleep for a period regardless
+            }
+            std::chrono::steady_clock::time_point nextTimeOut;
+
+            while (m_keepProcessing == true) {
+                switch (m_currentState) {
                     case MQTTState::eMQTTConnection_Requested:
                     {
                         // start timer for connection timeout
+                        if (waitingForConnection == false) {
+                            nextTimeOut = std::chrono::steady_clock::now() + connectionTimeout;
+                            waitingForConnection = true;
+                        }
                     }
                     break;
                     case MQTTState::eMQTTConnection_Failed:
                     {
                         // reconnect time out?
+                        // may just keep failing....
                     }
                     break;
                     case MQTTState::eMQTTConnection_Success:
                     {
+                        waitingForConnection = false; // we have it
                         // if we have subscriptions then make it so
                         if (m_subscriptions.empty() == false) {
                             subscribe();
+                        } else {
+                            m_currentState = MQTTState::eMQTTConnection_Active;
                         }
+
+                        // start the keep alive time 
                     }
                     break;
                     case MQTTState::eMQTTSubscription_Requested:
@@ -244,6 +300,15 @@ namespace afm {
                     case MQTTState::eMQTTSubscription_Success:
                     {
                         // we succeeded
+                        m_currentState = MQTTState::eMQTTConnection_Active;
+                        nextTimeOut = std::chrono::steady_clock::now() + keepAliveTime;
+                    }
+                    break;
+                    case MQTTState::eMQTTConnection_Active:
+                    {
+                        if (timeoutOccurred == true) {
+                            nextTimeOut = std::chrono::steady_clock::now() + keepAliveTime;
+                        }
                     }
                     break;
                     default:
@@ -251,6 +316,16 @@ namespace afm {
 
                     }
                     break;
+                }
+                timeoutOccurred = false;
+                if (m_lock.waitUntil(nextTimeOut) == std::cv_status::timeout) {
+                    timeoutOccurred = true;
+                    if (waitingForConnection == true) {
+                        // try a reconnect
+                        sendConnect();
+                    } else if (hasKeepAlive == true) {
+                        sendKeepAlive();
+                    }
                 }
             }
         }

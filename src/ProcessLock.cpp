@@ -54,5 +54,12 @@ namespace afm {
 
             return m_processFlag.wait_until(lk, waitTime);
         }
+
+        std::cv_status ProcessLock::waitUntil(std::chrono::steady_clock::time_point waitTime)
+        {
+            std::unique_lock<std::mutex> lk(m_processMutex);
+
+            return m_processFlag.wait_until(lk, waitTime);
+        }
     }
 }

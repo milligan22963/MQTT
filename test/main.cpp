@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
     MQTTOptions mqttOptions = {
         {sc_keepAlive, 30},
         {sc_brokerURL, "ec2-18-191-138-192.us-east-2.compute.amazonaws.com"},
+        {sc_clientId, "TestClient"},
         {sc_brokerPort, 1883}
     };
 

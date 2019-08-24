@@ -25,6 +25,7 @@ namespace afm {
             eMQTTSubscription_Requested,
             eMQTTSubscription_Success,
             eMQTTSubscription_Failed,
+            eMQTTConnection_Active,
             eMQTTDisconnect_Requested,
             eMQTTDisconnect_Success,
             eMQTTDisconnect_Failed,
@@ -55,9 +56,12 @@ namespace afm {
             protected:
                 bool subscribe();
                 bool unsubscribe();
+                void sendConnect();
+                void sendKeepAlive();
                 void process();
 
             private:
+                std::string                     m_clientId;
                 uint16_t                        m_keepAliveTime = 0;
                 std::atomic<bool>               m_keepProcessing;
                 std::thread                     m_stateProcessor;   
@@ -66,6 +70,7 @@ namespace afm {
                 IMQTTListenerSPtr               m_pListener = nullptr;
                 MQTTProcessorSPtr               m_pProcessor = nullptr;
                 std::atomic<MQTTState>          m_currentState;
+                std::atomic<bool>               m_isConnected;
                 common::ProcessLock             m_lock;
         };
 
