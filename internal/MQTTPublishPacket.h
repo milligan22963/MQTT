@@ -20,6 +20,8 @@ namespace afm {
 
                 virtual bool initialize(const MQTTOptions &options) override;
 
+                virtual bool getPacketField(const std::string &field, MQTT_QOS &value) override;
+
             protected:
                 virtual uint32_t getVariableLength() override;
                 virtual bool encodePayload(MQTTBuffer &buffer) override;

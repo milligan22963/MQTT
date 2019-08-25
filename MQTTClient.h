@@ -9,6 +9,7 @@
 #define _H_MQTTCLIENT
 
 #include <atomic>
+#include <map>
 #include <thread>
 #include "IMQTTListener.h"
 #include "IMQTTProcessorListener.h"
@@ -23,17 +24,13 @@ namespace afm {
             eMQTTConnection_Success,
             eMQTTConnection_Failed,
             eMQTTConnection_Active,
-            eMQTTSubscription_Requested,
-            eMQTTSubscription_Success,
-            eMQTTSubscription_Failed,
-            eMQTTUnSubscribe_Requested,
-            eMQTTUnSubscribe_Success,
-            eMQTTUnSubscribe_Failed,
             eMQTTDisconnect_Requested,
             eMQTTDisconnect_Success,
             eMQTTDisconnect_Failed,
             eEndMQTTStates
         };
+
+        using MQTTMessageQueue = std::map<uint16_t, IMQTTPacketSPtr>;
 
         class MQTTClient : public IMQTTProcessListener, public std::enable_shared_from_this<MQTTClient>
         {
@@ -48,7 +45,8 @@ namespace afm {
 
                 virtual bool removeSubscription(const MQTTSubscription &subscription);
                 virtual bool unsubscribe();
-                virtual bool sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos);
+                virtual bool sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message,
+                                         MQTT_QOS qos, bool retain);
                 virtual void shutdown();
 
                 /**
@@ -61,12 +59,19 @@ namespace afm {
                 virtual void onError() override;
 
             protected:
+                void queueOutgoingMessage(IMQTTPacketSPtr pMessage);
+                void queueIncomingMessage(IMQTTPacketSPtr pMessage);
                 void sendConnect();
                 void sendKeepAlive();
                 void process();
 
+                void persistMessage(IMQTTPacketSPtr pMessage);
+                void restoreMessages();
+
             private:
                 std::string                     m_clientId;
+                std::string                     m_persistencePath;
+                uint32_t                        m_maxBacklog = 1000;
                 uint16_t                        m_keepAliveTime = 0;
                 std::atomic<bool>               m_keepProcessing;
                 std::thread                     m_stateProcessor;   
@@ -79,6 +84,8 @@ namespace afm {
                 std::atomic<bool>               m_isConnected;
                 std::atomic<bool>               m_subscribeOnConnect;
                 common::ProcessLock             m_lock;
+                MQTTMessageQueue                m_outgoingMessageQueue;
+                MQTTMessageQueue                m_incomingMessageQueue;
         };
 
         using MQTTClientSPtr = std::shared_ptr<MQTTClient>;

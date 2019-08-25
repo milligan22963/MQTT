@@ -20,11 +20,14 @@ namespace afm {
 
                 virtual bool initialize(const MQTTOptions &options) override;
 
+                virtual bool getPacketField(const std::string &field, uint16_t &value) override;
+
+                uint16_t getMessageId() const { return m_messageId; }
+
             protected:
                 virtual uint32_t getVariableLength() override;
                 virtual bool encodePayload(MQTTBuffer &buffer) override;
                 virtual bool decodePayload(const MQTTBuffer &buffer, uint32_t &offset, uint32_t payloadLength) override;
-                uint16_t getMessageId() const { return m_messageId; }
 
             private:
                 uint16_t m_messageId = 0;

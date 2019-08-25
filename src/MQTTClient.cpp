@@ -38,6 +38,13 @@ namespace afm {
             extractValue(options, sc_keepAlive, m_keepAliveTime);
             extractValue(options, sc_clientId, m_clientId);
 
+            // pull out persistence object and then path and backlog...
+            MQTTOptions persistence;
+            if (extractValue(options, sc_persistence, persistence) == true) {
+                extractValue(options, sc_persistencePath, m_persistencePath);
+                extractValue(options, sc_persistenceBacklog, m_maxBacklog);
+            }
+
             MQTTOptions clientOptions = options;
 
             clientOptions[sc_processorType] = sc_mqttClient;
@@ -46,6 +53,7 @@ namespace afm {
                 m_pProcessor->addListener(shared_from_this());
                 m_pListener = pListener;
 
+                // restore packets 
                 m_keepProcessing = true;
                 m_stateProcessor = std::thread(&MQTTClient::process, shared_from_this());
 
@@ -94,7 +102,6 @@ namespace afm {
                 IMQTTPacketSPtr pPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Subscribe);
 
                 if (pPacket->initialize(subscribeOptions) == true) {
-                    m_currentState = MQTTState::eMQTTSubscription_Requested;
                     m_pProcessor->sendPacket(pPacket);
                     success = true;
                 }
@@ -124,7 +131,6 @@ namespace afm {
                 IMQTTPacketSPtr pPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_UnSubscribe);
 
                 if (pPacket->initialize(unsubscribeOptions) == true) {
-                    m_currentState = MQTTState::eMQTTUnSubscribe_Requested;
                     m_pProcessor->sendPacket(pPacket);
                     success = true;
                 }
@@ -133,10 +139,30 @@ namespace afm {
             return success;
         }
 
-        bool MQTTClient::sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos)
+        bool MQTTClient::sendMessage(const MQTTBuffer &topic, const MQTTBuffer &message, MQTT_QOS qos, bool retain)
         {
             bool success = false;
 
+            MQTTOptions messageOptions;
+
+            messageOptions[sc_optionMessageId] = (uint16_t)m_nextMessageId++;
+            messageOptions[sc_topic] = topic;
+            messageOptions[sc_message] = message;
+            messageOptions[sc_qosLevel] = qos;
+            messageOptions[sc_retainFlag] = retain;
+
+            IMQTTPacketSPtr pPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_Publish);
+
+            if (pPacket->initialize(messageOptions) == true) {
+                // Good packet if qos > 0 we need to persist it
+                if (qos > MQTT_QOS::MQTT_QOS_0) {
+                    queueOutgoingMessage(pPacket);
+                }
+                if (m_isConnected == true) {
+                    m_pProcessor->sendPacket(pPacket);
+                    success = true;
+                }
+            }
             return success;
         }
 
@@ -191,27 +217,23 @@ namespace afm {
                 break;
                 case MQTTPacketType::MQTT_SubscribeAck:
                 {
+                    bool subscribeSuccess = false;
+
                     MQTTSubscribeAckPacketSPtr pAckPacket = std::dynamic_pointer_cast<MQTTSubscribeAckPacket>(pPacket);
 
                     if (pAckPacket != nullptr) {
-                        m_currentState = pAckPacket->subscriptionSuccess() == true
-                            ? MQTTState::eMQTTSubscription_Success
-                            : MQTTState::eMQTTSubscription_Failed;
-                    } else {
-                        m_currentState = MQTTState::eMQTTSubscription_Failed;
+                        subscribeSuccess = pAckPacket->subscriptionSuccess();
                     }
 
                     if (m_pListener != nullptr) {
-                        m_pListener->onSubscriptionAdded(m_currentState == MQTTState::eMQTTSubscription_Success);
+                        m_pListener->onSubscriptionAdded(subscribeSuccess);
                     }
                 }
                 break;
                 case MQTTPacketType::MQTT_UnSubscribeAck:
                 {
-                     m_currentState = MQTTState::eMQTTUnSubscribe_Success;
-
                     if (m_pListener != nullptr) {
-                        m_pListener->onSubscriptionRemoved(m_currentState == MQTTState::eMQTTUnSubscribe_Success);
+                        m_pListener->onSubscriptionRemoved(true);
                     }
                 }
                 break;
@@ -222,6 +244,30 @@ namespace afm {
                     if (m_pListener != nullptr) {
                         m_pListener->onMessageReceived(pPacket);
                     }
+
+                    // send ack if qos > 0
+                }
+                break;
+                case MQTTPacketType::MQTT_PublishAck:
+                {
+                    // for QOS 1 they have it, we are done
+                    queueOutgoingMessage(pPacket);
+                }
+                break;
+                case MQTTPacketType::MQTT_PublishReceive:
+                {
+                    // for qos 2 they have it, we need to keep tracking
+                    queueOutgoingMessage(pPacket);
+                }
+                break;
+                case MQTTPacketType::MQTT_PublishRelease:
+                {
+                    queueIncomingMessage(pPacket);
+                }
+                break;
+                case MQTTPacketType::MQTT_PublishComplete:
+                {
+                    queueOutgoingMessage(pPacket);
                 }
                 break;
                 case MQTTPacketType::MQTT_PingResponse:
@@ -255,6 +301,69 @@ namespace afm {
             m_isConnected = false;
 
             m_lock.wake();
+        }
+
+        /**
+         * Internal parts
+         */
+        void MQTTClient::queueOutgoingMessage(IMQTTPacketSPtr pMessage)
+        {
+            uint16_t messageId;
+
+            if (pMessage->getPacketField(sc_optionMessageId, messageId) == true) {
+                bool moreToDo = true;
+                MQTTMessageQueue::iterator iter = m_outgoingMessageQueue.find(messageId);
+
+                if (iter != m_outgoingMessageQueue.end()) {
+                    // what qos was requested?
+                    MQTT_QOS qos;
+
+                    if (pMessage->getPacketField(sc_qosLevel, qos) == true) {
+                        if (qos == MQTT_QOS::MQTT_QOS_1) {
+                            // for messages I sent, we can now drop this one as it was received
+                            moreToDo = false; // we are done
+                            m_outgoingMessageQueue.erase(iter); // done
+                        } else if (qos == MQTT_QOS::MQTT_QOS_2) {
+                        } else {
+                            // ?
+                            moreToDo = false;
+                        }
+                    }
+                }
+                if (moreToDo == true) {
+                    m_outgoingMessageQueue[messageId] = pMessage;
+                }
+            }
+        }
+
+        void MQTTClient::queueIncomingMessage(IMQTTPacketSPtr pMessage)
+        {
+            uint16_t messageId;
+
+            if (pMessage->getPacketField(sc_optionMessageId, messageId) == true) {
+                bool moreToDo = true;
+                MQTTMessageQueue::iterator iter = m_incomingMessageQueue.find(messageId);
+
+                if (iter != m_incomingMessageQueue.end()) {
+                    // what qos was requested?
+                    MQTT_QOS qos;
+
+                    if (pMessage->getPacketField(sc_qosLevel, qos) == true) {
+                        if (qos == MQTT_QOS::MQTT_QOS_1) {
+                            // for messages I sent, we can now drop this one as it was received
+                            moreToDo = false; // we are done
+                            m_incomingMessageQueue.erase(iter); // done
+                        } else if (qos == MQTT_QOS::MQTT_QOS_2) {
+                        } else {
+                            // ?
+                            moreToDo = false;
+                        }
+                    }
+                }
+                if (moreToDo == true) {
+                    m_incomingMessageQueue[messageId] = pMessage;
+                }
+            }
         }
 
         void MQTTClient::sendConnect()
@@ -325,31 +434,25 @@ namespace afm {
                     case MQTTState::eMQTTConnection_Success:
                     {
                         waitingForConnection = false; // we have it
+
                         // if we have subscriptions then make it so
                         if (m_subscribeOnConnect == true) {
                             subscribe(m_subscribeOnConnect);
-                        } else {
-                            m_currentState = MQTTState::eMQTTConnection_Active;
-                            nextTimeOut = std::chrono::steady_clock::now() + keepAliveTime;
                         }
 
                         // start the keep alive time 
-                    }
-                    break;
-                    case MQTTState::eMQTTSubscription_Requested:
-                    {
-
-                    }
-                    break;
-                    case MQTTState::eMQTTSubscription_Success:
-                    {
-                        // we succeeded
                         m_currentState = MQTTState::eMQTTConnection_Active;
                         nextTimeOut = std::chrono::steady_clock::now() + keepAliveTime;
                     }
                     break;
                     case MQTTState::eMQTTConnection_Active:
                     {
+                        if (m_outgoingMessageQueue.empty() == false) {
+                            //  Send what we can - do we want to limit?
+                        }
+                        if (m_incomingMessageQueue.empty() == false) {
+                            // Send what we can - handle as needed i.e ack, received, etc
+                        }
                         if (timeoutOccurred == true) {
                             nextTimeOut = std::chrono::steady_clock::now() + keepAliveTime;
                         }

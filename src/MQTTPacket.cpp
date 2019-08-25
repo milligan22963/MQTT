@@ -98,6 +98,31 @@ namespace afm {
             return 0;
         }
 
+        bool MQTTPacket::getPacketField(const std::string &field, std::string &value)
+        {
+            return false;
+        }
+
+        bool MQTTPacket::getPacketField(const std::string &field, uint8_t &value)
+        {
+            return false;
+        }
+
+        bool MQTTPacket::getPacketField(const std::string &field, uint16_t &value)
+        {
+            return false;
+        }
+
+        bool MQTTPacket::getPacketField(const std::string &field, uint32_t &value)
+        {
+            return false;
+        }
+
+        bool MQTTPacket::getPacketField(const std::string &field, MQTT_QOS &value)
+        {
+            return false;
+        }
+
         bool MQTTPacket::encodeData(MQTTBuffer &buffer, const MQTTBuffer &data)
         {
             bool success = true;

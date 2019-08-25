@@ -20,6 +20,9 @@ namespace afm {
          */
         const std::string sc_brokerURL = "url";
         const std::string sc_brokerPort = "port";
+        const std::string sc_persistence = "persistence";
+        const std::string sc_persistencePath = "path";
+        const std::string sc_persistenceBacklog = "backlog";
 
         /**
          * MQTT Connect options

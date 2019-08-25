@@ -64,6 +64,18 @@ namespace afm {
             return success;
         }
 
+        bool MQTTPublishPacket::getPacketField(const std::string &field, MQTT_QOS &value)
+        {
+            bool success = false;
+
+            if (field == sc_qosLevel) {
+                value = m_qos;
+                success = true;
+            }
+
+            return success;
+        }
+
         /**
          * Internal parts
          */

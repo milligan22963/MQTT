@@ -30,6 +30,18 @@ namespace afm {
             return success;
         }
 
+        bool MQTTTrackedPacket::getPacketField(const std::string &field, uint16_t &value)
+        {
+            bool success = false;
+
+            if (field == sc_optionMessageId) {
+                value = m_messageId;
+                success = true;
+            }
+
+            return success;
+        }
+
         /**
          * Internal parts
          */

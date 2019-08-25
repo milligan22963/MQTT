@@ -43,6 +43,11 @@ namespace afm {
                 virtual bool encodePacket(MQTTBuffer &buffer) = 0;
                 virtual bool decodePacket(const MQTTBuffer &buffer) = 0;
                 virtual MQTTPacketType getType() const = 0;
+                virtual bool getPacketField(const std::string &field, std::string &value) = 0;
+                virtual bool getPacketField(const std::string &field, uint8_t &value) = 0;
+                virtual bool getPacketField(const std::string &field, uint16_t &value) = 0;
+                virtual bool getPacketField(const std::string &field, uint32_t &value) = 0;
+                virtual bool getPacketField(const std::string &field, MQTT_QOS &value) = 0;
         };
 
         using IMQTTPacketSPtr = std::shared_ptr<IMQTTPacket>;

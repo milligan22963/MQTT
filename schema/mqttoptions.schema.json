@@ -28,6 +28,25 @@
                 1883,
                 8883
             ]
+        },
+        "persistence": {
+            "$id" : "#/properties/persistence",
+            "type":"object",
+            "title": "Persistence Options",
+            "properties": {
+                "path":{
+                    "$id": "#properties/perstistence/path",
+                    "type":"string",
+                    "title": "The full path to the storage area"
+                },
+                "backlog": {
+                    "$id": "#properties/persistence/backlog",
+                    "type":"integer",
+                    "title": "The depth of the backlog",
+                    "default": 100,
+                    "minimum": 1
+                }
+            }
         }
     }
 }

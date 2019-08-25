@@ -30,6 +30,11 @@ namespace afm {
                 virtual bool encodePacket(MQTTBuffer &buffer) final;
                 virtual bool decodePacket(const MQTTBuffer &buffer) final;
                 virtual MQTTPacketType getType() const final;
+                virtual bool getPacketField(const std::string &field, std::string &value) override;
+                virtual bool getPacketField(const std::string &field, uint8_t &value) override;
+                virtual bool getPacketField(const std::string &field, uint16_t &value) override;
+                virtual bool getPacketField(const std::string &field, uint32_t &value) override;
+                virtual bool getPacketField(const std::string &field, MQTT_QOS &value) override;
 
                 static MQTTPacketType getType(const MQTTBuffer &buffer);
 

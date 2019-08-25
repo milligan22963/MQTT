@@ -22,6 +22,9 @@ namespace afm {
          */
         extern const std::string sc_brokerURL;
         extern const std::string sc_brokerPort;
+        extern const std::string sc_persistence;
+        extern const std::string sc_persistencePath;
+        extern const std::string sc_persistenceBacklog;
 
         /**
          * MQTT Connect options
