@@ -59,8 +59,8 @@ namespace afm {
                 virtual void onError() override;
 
             protected:
-                void queueOutgoingMessage(IMQTTPacketSPtr pMessage);
-                void queueIncomingMessage(IMQTTPacketSPtr pMessage);
+                void processMyMessages(IMQTTPacketSPtr pMessage);
+                void processTheirMessages(IMQTTPacketSPtr pMessage);
                 void sendConnect();
                 void sendKeepAlive();
                 void process();

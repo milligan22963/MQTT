@@ -155,9 +155,12 @@ namespace afm {
 
             if (pPacket->initialize(messageOptions) == true) {
                 // Good packet if qos > 0 we need to persist it
+                // we will persist regardless of connection status
+                // as we need to enusre at least once delivery
                 if (qos > MQTT_QOS::MQTT_QOS_0) {
-                    queueOutgoingMessage(pPacket);
+                    processMyMessages(pPacket);
                 }
+
                 if (m_isConnected == true) {
                     m_pProcessor->sendPacket(pPacket);
                     success = true;
@@ -246,28 +249,29 @@ namespace afm {
                     }
 
                     // send ack if qos > 0
+                    processTheirMessages(pPacket);
                 }
                 break;
                 case MQTTPacketType::MQTT_PublishAck:
                 {
                     // for QOS 1 they have it, we are done
-                    queueOutgoingMessage(pPacket);
+                    processMyMessages(pPacket);
                 }
                 break;
                 case MQTTPacketType::MQTT_PublishReceive:
                 {
                     // for qos 2 they have it, we need to keep tracking
-                    queueOutgoingMessage(pPacket);
+                    processMyMessages(pPacket);
                 }
                 break;
                 case MQTTPacketType::MQTT_PublishRelease:
                 {
-                    queueIncomingMessage(pPacket);
+                    processTheirMessages(pPacket);
                 }
                 break;
                 case MQTTPacketType::MQTT_PublishComplete:
                 {
-                    queueOutgoingMessage(pPacket);
+                    processMyMessages(pPacket);
                 }
                 break;
                 case MQTTPacketType::MQTT_PingResponse:
@@ -306,7 +310,7 @@ namespace afm {
         /**
          * Internal parts
          */
-        void MQTTClient::queueOutgoingMessage(IMQTTPacketSPtr pMessage)
+        void MQTTClient::processMyMessages(IMQTTPacketSPtr pMessage)
         {
             uint16_t messageId;
 
@@ -336,33 +340,40 @@ namespace afm {
             }
         }
 
-        void MQTTClient::queueIncomingMessage(IMQTTPacketSPtr pMessage)
+        void MQTTClient::processTheirMessages(IMQTTPacketSPtr pMessage)
         {
             uint16_t messageId;
 
             if (pMessage->getPacketField(sc_optionMessageId, messageId) == true) {
-                bool moreToDo = true;
-                MQTTMessageQueue::iterator iter = m_incomingMessageQueue.find(messageId);
+                MQTT_QOS qos;
+                MQTTOptions replyOptions;
 
-                if (iter != m_incomingMessageQueue.end()) {
-                    // what qos was requested?
-                    MQTT_QOS qos;
+                // we need to reply w/ the messageId they provided
+                replyOptions[sc_optionMessageId] = messageId;
 
-                    if (pMessage->getPacketField(sc_qosLevel, qos) == true) {
-                        if (qos == MQTT_QOS::MQTT_QOS_1) {
-                            // for messages I sent, we can now drop this one as it was received
-                            moreToDo = false; // we are done
-                            m_incomingMessageQueue.erase(iter); // done
-                        } else if (qos == MQTT_QOS::MQTT_QOS_2) {
-                        } else {
-                            // ?
-                            moreToDo = false;
+                if (pMessage->getPacketField(sc_qosLevel, qos) == true) {
+                    if (qos == MQTT_QOS::MQTT_QOS_1) {
+                        IMQTTPacketSPtr pAckPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_PublishAck);
+                        if (pAckPacket->initialize(replyOptions) == true) {
+                            m_incomingMessageQueue[messageId] = pMessage;
+                        }
+                    } else if (qos == MQTT_QOS::MQTT_QOS_2) {
+                        IMQTTPacketSPtr pAckPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_PublishReceive);
+                        if (pAckPacket->initialize(replyOptions) == true) {
+                            m_incomingMessageQueue[messageId] = pMessage;
+                        }
+                    }
+                } else {
+                    // if no qos level then this is a qos2 chain of events message
+                    if (pMessage->getType() == MQTTPacketType::MQTT_PublishRelease) {
+                        IMQTTPacketSPtr pAckPacket = MQTTFactory::getInstance()->createPacket(MQTTPacketType::MQTT_PublishComplete);
+                        if (pAckPacket->initialize(replyOptions) == true) {
+                            m_incomingMessageQueue[messageId] = pMessage;
                         }
                     }
                 }
-                if (moreToDo == true) {
-                    m_incomingMessageQueue[messageId] = pMessage;
-                }
+                MQTTMessageQueue::iterator iter = m_incomingMessageQueue.find(messageId);
+                m_lock.wake();
             }
         }
 
